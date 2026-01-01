@@ -64,7 +64,7 @@ const slurm = reactive({
   ntasksPerNode: 4,
   omp: 1,
   gpusPerNode: 0,
-  modules: 'gcc/12.2 openmpi/4.1.5 cuda/12.3',
+  modules: '',
   env: 'OMP_NUM_THREADS=1',
   run: 'mpirun -np 4 ./a.out',
   scriptName: 'run.slurm',
@@ -361,6 +361,13 @@ const filteredModes = computed(() => {
 const currentModeLabel = computed(() => {
   const found = modes.find(m => m.key === mode.value);
   return found ? found.label : 'HPC 指令產生器';
+});
+
+const slurmSelectedModules = computed({
+  get: () => (slurm.modules || '').trim().split(/\s+/).filter(Boolean),
+  set: (val) => {
+    slurm.modules = val.join(' ');
+  }
 });
 
 // Helpers
@@ -1071,7 +1078,27 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         </div>
         <div class="form-group">
           <label>Modules (以空格分隔)</label>
-          <input type="text" v-model="slurm.modules" placeholder="gcc/12.2 openmpi/4.1.5 cuda/12.3" />
+          <input type="text" v-model="slurm.modules" placeholder="例如: gcc/12.2 openmpi/4.1.5" />
+          
+          <div v-if="availableModules.length > 0" style="margin-top: 12px;">
+            <details>
+              <summary style="cursor: pointer; color: #58a6ff; font-size: 0.9rem;">從已掃描列表挑選 ({{ slurmSelectedModules.length }} 已選)</summary>
+              <div class="module-list-container" style="max-height: 250px; margin-top: 12px;">
+                <div v-for="pkg in availableModules" :key="pkg.name" class="module-group">
+                  <div class="pkg-name">{{ pkg.name }}</div>
+                  <div class="pkg-versions">
+                    <label v-for="ver in pkg.versions" :key="ver" class="version-chip">
+                      <input type="checkbox" :value="ver ? `${pkg.name}/${ver}` : pkg.name" v-model="slurmSelectedModules" />
+                      <span class="chip-content">{{ ver || 'default' }}</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div v-else style="margin-top: 8px;">
+            <small class="muted">💡 提示：在「Environment Modules」分頁掃描模組後，即可在此處快速挑選。</small>
+          </div>
         </div>
         <div class="form-group">
           <label>環境變數 (KEY=VALUE 空格分隔)</label>
@@ -1309,7 +1336,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
 
         <div class="form-group">
           <label>手動輸入 (Load)</label>
-          <input type="text" v-model="modules.load" placeholder="gcc/12.2 openmpi/4.1.5" />
+          <input type="text" v-model="modules.load" placeholder="例如: gcc/12.2 openmpi/4.1.5" />
           <small class="muted">除了上方勾選的項目外，您也可以在此手動輸入 (以空格分隔)。</small>
         </div>
 
