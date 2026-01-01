@@ -21,6 +21,15 @@ const mpi = reactive({
   omp: 1,
   envExtra: '',
   executable: './main',
+  // Persistent binding state
+  bindingConfig: {
+    raw: '',
+    policy: 'sequential',
+    selectedCpus: [],
+    manualAssignments: [], // Store as array of [rank, cpu] for JSON compatibility
+    viewMode: 'socket'
+  },
+  rankfileText: ''
 });
 
 const compile = reactive({
@@ -285,7 +294,6 @@ const onSysInfoPaste = (event) => {
   }
 };
 
-const rankfileTextVal = ref('');
 const showSlurmPreview = ref(false);
 
 // Sidebar state and search
@@ -428,7 +436,7 @@ const slurmTimeValid = computed(() => {
 const generatedCommand = computed(() => {
   switch (mode.value) {
     case 'mpi':
-      return buildMpiCmd(mpi, rankfileTextVal.value);
+      return buildMpiCmd(mpi, mpi.rankfileText);
     case 'compile':
       return buildCompileCmd(compile);
     case 'sysinfo':
@@ -554,7 +562,7 @@ const sendCudaMemcheckToSlurm = () => {
 };
 
 const sendMpiToSlurm = () => {
-  slurm.run = buildMpiCmd(mpi, rankfileTextVal.value);
+  slurm.run = buildMpiCmd(mpi, mpi.rankfileText);
   mode.value = 'slurm';
 };
 
@@ -954,14 +962,21 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <small class="muted">提示：OpenMPI 用 --bind-to；Intel MPI 可用 -genv；MPICH 用 -env</small>
 
         <hr />
-        <CpuBinding v-model="rankfileTextVal" :mpiType="mpi.type" :hostfile="mpi.hostfile" :externalTopology="cpuTopologyRaw" :defaultRanks="mpi.np" />
-        <div v-if="rankfileTextVal" class="result-box">
+        <CpuBinding 
+          v-model="mpi.rankfileText" 
+          v-model:config="mpi.bindingConfig"
+          :mpiType="mpi.type" 
+          :hostfile="mpi.hostfile" 
+          :externalTopology="cpuTopologyRaw" 
+          :defaultRanks="mpi.np" 
+        />
+        <div v-if="mpi.rankfileText" class="result-box">
           <div class="btn-row">
-            <button class="copy-btn" @click="navigator.clipboard.writeText(rankfileTextVal); alert('rankfile 已複製！');">複製 rankfile</button>
-            <button class="copy-btn" @click="(() => { const blob = new Blob([rankfileTextVal], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'rankfile.txt'; a.click(); URL.revokeObjectURL(a.href); })()">下載 rankfile</button>
+            <button class="copy-btn" @click="navigator.clipboard.writeText(mpi.rankfileText); alert('rankfile 已複製！');">複製 rankfile</button>
+            <button class="copy-btn" @click="(() => { const blob = new Blob([mpi.rankfileText], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'rankfile.txt'; a.click(); URL.revokeObjectURL(a.href); })()">下載 rankfile</button>
           </div>
           # 產生的 OpenMPI rankfile 預覽
-          {{ rankfileTextVal }}
+          {{ mpi.rankfileText }}
         </div>
         <small class="muted">OpenMPI 可用 --rankfile；Intel MPI 可對應 I_MPI_PIN_PROCESSOR_LIST；MPICH 可用 taskset/sched_setaffinity。</small>
       </div>

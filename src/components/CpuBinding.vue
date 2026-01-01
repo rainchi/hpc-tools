@@ -6,15 +6,25 @@ const props = defineProps({
   hostfile: { type: String, default: '' },
   modelValue: { type: String, default: '' }, // rankfileText v-model
   externalTopology: { type: String, default: '' },
-  defaultRanks: { type: Number, default: 4 }
+  defaultRanks: { type: Number, default: 4 },
+  config: {
+    type: Object,
+    default: () => ({
+      raw: '',
+      policy: 'sequential',
+      selectedCpus: [],
+      manualAssignments: [],
+      viewMode: 'socket'
+    })
+  }
 });
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'update:config']);
 
 const binding = reactive({
-  raw: '',
-  policy: 'sequential',
+  raw: props.config.raw || '',
+  policy: props.config.policy || 'sequential',
   ranks: props.defaultRanks,
-  viewMode: 'socket', // socket, node, flat
+  viewMode: props.config.viewMode || 'socket', // socket, node, flat
   parsedItems: []
 });
 
@@ -22,13 +32,8 @@ watch(() => props.defaultRanks, (newVal) => {
   binding.ranks = newVal;
 });
 
-const selectedCpus = ref([]); // For auto policies
-const manualAssignments = ref(new Map()); // Map<Rank, CpuId> for manual policy
-
-// Drag state
-const isDragging = ref(false);
-const isSelecting = ref(true);
-const dragSource = ref(null); // { type: 'rank'|'cpu', value: id }
+const selectedCpus = ref(props.config.selectedCpus ? [...props.config.selectedCpus] : []); // For auto policies
+const manualAssignments = ref(new Map(props.config.manualAssignments || [])); // Map<Rank, CpuId> for manual policy
 
 const parseCpuInfo = () => {
   const lines = (binding.raw || '').trim().split(/\r?\n/).filter((l) => l.trim().length);
@@ -67,6 +72,63 @@ const parseCpuInfo = () => {
     selectedCpus.value = items.map(x => x.cpu);
   }
 };
+
+// Sync internal state to external config
+watch([binding, selectedCpus, manualAssignments], () => {
+  const newConfig = {
+    raw: binding.raw,
+    policy: binding.policy,
+    selectedCpus: [...selectedCpus.value],
+    manualAssignments: Array.from(manualAssignments.value.entries()),
+    viewMode: binding.viewMode
+  };
+  
+  // Only emit if something actually changed to prevent infinite loops
+  if (JSON.stringify(newConfig) !== JSON.stringify(props.config)) {
+    emit('update:config', newConfig);
+  }
+}, { deep: true });
+
+// Sync external config to internal state (for when switching servers/loading)
+watch(() => props.config, (newConfig) => {
+  if (!newConfig) return;
+  
+  // Only update if values are different
+  if (newConfig.raw !== undefined && newConfig.raw !== binding.raw) {
+    binding.raw = newConfig.raw;
+  }
+  if (newConfig.policy !== undefined && newConfig.policy !== binding.policy) {
+    binding.policy = newConfig.policy;
+  }
+  if (newConfig.viewMode !== undefined && newConfig.viewMode !== binding.viewMode) {
+    binding.viewMode = newConfig.viewMode;
+  }
+  
+  if (newConfig.selectedCpus) {
+    const newSelected = [...newConfig.selectedCpus].sort((a, b) => a - b);
+    const currentSelected = [...selectedCpus.value].sort((a, b) => a - b);
+    if (JSON.stringify(newSelected) !== JSON.stringify(currentSelected)) {
+      selectedCpus.value = newSelected;
+    }
+  }
+  
+  if (newConfig.manualAssignments) {
+    const newMapArr = JSON.stringify(newConfig.manualAssignments.sort((a, b) => a[0] - b[0]));
+    const currentMapArr = JSON.stringify(Array.from(manualAssignments.value.entries()).sort((a, b) => a[0] - b[0]));
+    if (newMapArr !== currentMapArr) {
+      manualAssignments.value = new Map(newConfig.manualAssignments);
+    }
+  }
+  
+  if (binding.raw && !binding.parsedItems.length) {
+    parseCpuInfo();
+  }
+}, { deep: true, immediate: true });
+
+// Drag state
+const isDragging = ref(false);
+const isSelecting = ref(true);
+const dragSource = ref(null); // { type: 'rank'|'cpu', value: id }
 
 // Grouping logic
 const groupedCpus = computed(() => {
