@@ -341,7 +341,6 @@ const modes = [
   { key: 'nsys', label: 'Nsight Systems (nsys)' },
   { key: 'ncu', label: 'Nsight Compute (ncu)' },
   { key: 'slurm', label: 'Slurm sbatch' },
-  { key: 'slurm-adv', label: 'Slurm 進階' },
   { key: 'slurm-array', label: 'Slurm 陣列' },
   { key: 'perf', label: 'CPU Profiling (perf)' },
   { key: 'valgrind', label: 'Valgrind' },
@@ -1114,6 +1113,44 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         </div>
         <small class="muted">提示：如需 GPU，請設定 --gpus-per-node 或在 Partition 指定 gpu 佇列。</small>
 
+        <div style="margin-top: 20px; border: 1px solid #30363d; border-radius: 8px; padding: 12px; background: rgba(255,255,255,0.02);">
+          <details>
+            <summary style="cursor: pointer; font-weight: 600; color: #c9d1d9;">進階選項 (Advanced Options)</summary>
+            <div style="margin-top: 16px;">
+              <div class="inline">
+                <div class="form-group">
+                  <label>記憶體限制 (--mem)</label>
+                  <input type="text" v-model="slurmAdv.mem" placeholder="32G" />
+                </div>
+                <div class="form-group">
+                  <label>QoS (--qos)</label>
+                  <Combobox v-model="slurmAdv.qos" :options="slurmData.qos" placeholder="normal" />
+                </div>
+              </div>
+              <div class="inline">
+                <div class="form-group">
+                  <label>GPU 綁定 (--gpu-bind)</label>
+                  <input type="text" v-model="slurmAdv.gpuBind" placeholder="closest" />
+                </div>
+                <div class="form-group">
+                  <label>節點限制 (--constraint)</label>
+                  <input type="text" v-model="slurmAdv.constraint" placeholder="a100|nvlink" />
+                </div>
+              </div>
+              <div class="checkbox-group">
+                <div>
+                  <input type="checkbox" id="exclusive" v-model="slurmAdv.exclusive" />
+                  <label for="exclusive">獨占節點 (--exclusive)</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="profile" v-model="slurmAdv.profile" />
+                  <label for="profile">啟用 Slurm profile (--profile)</label>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+
         <hr />
         <div class="checkbox-group">
           <div>
@@ -1127,41 +1164,6 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
           </div>
           <pre>{{ buildSlurmScript(slurm, slurmAdv) }}</pre>
         </div>
-      </div>
-
-      <!-- Slurm advanced -->
-      <div v-if="mode === 'slurm-adv'">
-        <div class="inline">
-          <div class="form-group">
-            <label>記憶體限制 (--mem)</label>
-            <input type="text" v-model="slurmAdv.mem" placeholder="32G" />
-          </div>
-          <div class="form-group">
-            <label>QoS (--qos)</label>
-            <Combobox v-model="slurmAdv.qos" :options="slurmData.qos" placeholder="normal" />
-          </div>
-        </div>
-        <div class="inline">
-          <div class="form-group">
-            <label>GPU 綁定 (--gpu-bind)</label>
-            <input type="text" v-model="slurmAdv.gpuBind" placeholder="closest" />
-          </div>
-          <div class="form-group">
-            <label>節點限制 (--constraint)</label>
-            <input type="text" v-model="slurmAdv.constraint" placeholder="a100|nvlink" />
-          </div>
-        </div>
-        <div class="checkbox-group">
-          <div>
-            <input type="checkbox" id="exclusive" v-model="slurmAdv.exclusive" />
-            <label for="exclusive">獨占節點 (--exclusive)</label>
-          </div>
-          <div>
-            <input type="checkbox" id="profile" v-model="slurmAdv.profile" />
-            <label for="profile">啟用 Slurm profile (--profile)</label>
-          </div>
-        </div>
-        <small class="muted">此分頁僅生成 sbatch/srun 旗標，請搭配 Slurm 腳本。</small>
       </div>
 
       <!-- Slurm array -->
