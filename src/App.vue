@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue';
+import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
 import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd } from './utils/builders';
 import CpuBinding from './components/CpuBinding.vue';
 import SystemInfoViewer from './components/SystemInfoViewer.vue';
@@ -751,8 +752,8 @@ const shareState = () => {
   }
   try {
     const json = JSON.stringify(data);
-    // Use a safe way to encode Unicode to Base64
-    const encoded = btoa(unescape(encodeURIComponent(json)));
+    // Compress and encode to a URL-safe string to produce much shorter share links
+    const encoded = compressToEncodedURIComponent(json);
     const url = new URL(window.location.href);
     url.hash = `share=${encoded}`;
     
@@ -782,7 +783,26 @@ const hash = window.location.hash;
 if (hash.startsWith('#share=')) {
   try {
     const encoded = hash.substring(7);
-    const json = decodeURIComponent(escape(atob(encoded)));
+    const tryDecompress = (s) => {
+      try {
+        const dec = decompressFromEncodedURIComponent(s);
+        if (dec) return dec;
+      } catch (e) { }
+      // Fallbacks: try base64url -> base64 decode, then atob
+      try {
+        let b = s.replace(/-/g, '+').replace(/_/g, '/');
+        while (b.length % 4) b += '=';
+        return decodeURIComponent(escape(atob(b)));
+      } catch (e) {
+        try {
+          return decodeURIComponent(escape(atob(s)));
+        } catch (e2) {
+          throw e2;
+        }
+      }
+    };
+
+    const json = tryDecompress(encoded);
     const data = JSON.parse(json);
     if (data.mode) mode.value = data.mode;
     if (data.state) applyState(data.state);
