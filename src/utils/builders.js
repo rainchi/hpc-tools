@@ -211,7 +211,8 @@ export const buildSysInfoCmd = (sysinfo) => {
   }
 
   if (sysinfo.collectSlurm) {
-    cmds.push('echo "---SECTION:SLURM_PARTITIONS---"', 'sinfo -h -o "%P" 2>/dev/null | sort -u || echo "SINFO_FAILED"');
+    // Collect partition name and its time limit (format: PARTITION|TIMELIMIT)
+    cmds.push('echo "---SECTION:SLURM_PARTITIONS---"', 'sinfo -h -o "%P|%l" 2>/dev/null | sort -u || echo "SINFO_FAILED"');
     cmds.push('echo "---SECTION:SLURM_ACCOUNTS---"', 'sacctmgr -n -p show assoc user=$USER format=Account 2>/dev/null | sort -u || echo "SACCTMGR_FAILED"');
     cmds.push('echo "---SECTION:SLURM_QOS---"', 'sacctmgr -n -p show assoc user=$USER format=QOS 2>/dev/null | sort -u || echo "SACCTMGR_FAILED"');
   }

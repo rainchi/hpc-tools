@@ -197,7 +197,8 @@ const slurmData = reactive({
   partitions: [],
   accounts: [],
   qos: [],
-  fetched: false
+  fetched: false,
+  partitionLimits: {}
 });
 
 const cpuTopologyRaw = ref('');
@@ -222,7 +223,15 @@ watch(() => sysinfo.rawOutput, (newVal) => {
     const partMatch = text.match(/---SECTION:SLURM_PARTITIONS---([\s\S]*?)(---SECTION|$)/);
     if (partMatch) {
       const parts = partMatch[1].trim().split(/\r?\n/).filter(l => l && l !== 'SINFO_FAILED');
-      slurmData.partitions = parts.map(p => p.replace('*', ''));
+      // parts expected as "PARTITION|TIMELIMIT" (TIMELIMIT may be empty or UNLIMITED)
+      const cleaned = parts.map(p => p.replace('*', ''));
+      slurmData.partitions = cleaned.map(p => p.split('|')[0]);
+      const limits = {};
+      cleaned.forEach(p => {
+        const [name, limit] = p.split('|');
+        if (name) limits[name] = (limit || '').trim();
+      });
+      slurmData.partitionLimits = limits;
       slurmData.fetched = true;
     }
   }
@@ -369,6 +378,51 @@ const slurmSelectedModules = computed({
   }
 });
 
+// Parse Slurm time strings (e.g., "1-00:00:00", "02:00:00", "UNLIMITED") to seconds
+const parseSlurmTimeToSeconds = (s) => {
+  if (!s) return null;
+  const str = String(s).trim();
+  if (!str) return null;
+  if (/^unlimited$/i.test(str) || /^infinite$/i.test(str)) return Infinity;
+  let days = 0;
+  let rest = str;
+  if (rest.includes('-')) {
+    const parts = rest.split('-');
+    days = parseInt(parts[0], 10) || 0;
+    rest = parts.slice(1).join('-');
+  }
+  const parts = rest.split(':').map(p => parseInt(p, 10));
+  // Support H:M:S or M:S or S
+  let secs = 0;
+  if (parts.length === 3) {
+    secs = (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+  } else if (parts.length === 2) {
+    secs = (parts[0] || 0) * 60 + (parts[1] || 0);
+  } else if (parts.length === 1) {
+    secs = parts[0] || 0;
+  }
+  return days * 86400 + secs;
+};
+
+const slurmTimeValid = computed(() => {
+  try {
+    if (!slurm.time) return true;
+    if (!slurmData.fetched) return true;
+    const part = slurm.partition;
+    if (!part) return true;
+    const limitStr = slurmData.partitionLimits?.[part];
+    if (!limitStr) return true;
+    const limitSecs = parseSlurmTimeToSeconds(limitStr);
+    if (limitSecs === null) return true;
+    if (limitSecs === Infinity) return true;
+    const mySecs = parseSlurmTimeToSeconds(slurm.time);
+    if (mySecs === null) return true;
+    return mySecs <= limitSecs;
+  } catch (e) {
+    return true;
+  }
+});
+
 // Helpers
 const generatedCommand = computed(() => {
   switch (mode.value) {
@@ -510,15 +564,27 @@ const generateWriteSlurmCmd = computed(() => {
 
 const handleCopy = (text, event) => {
   if (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    const originalText = btn.innerText;
-    btn.innerText = '已複製！';
-    btn.disabled = true;
-    setTimeout(() => {
-      btn.innerText = originalText;
-      btn.disabled = false;
-    }, 2000);
+  let content = text;
+  if (typeof text === 'function') {
+    try { content = text(); } catch (e) { content = String(text); }
+  } else if (text && typeof text === 'object' && text.value !== undefined) {
+    content = text.value;
+  }
+  navigator.clipboard.writeText(String(content)).then(() => {
+    if (event && event.target) {
+      const btn = event.target;
+      const originalText = btn.innerText;
+      btn.innerText = '已複製！';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }, 2000);
+    }
+    showToast('已複製到剪貼簿！', 'info');
+  }).catch((err) => {
+    console.error('Copy failed', err);
+    showToast('複製失敗', 'error');
   });
 };
 
@@ -526,16 +592,57 @@ const copyToClipboard = (event) => {
   let text = generatedCommand.value;
   if (mode.value === 'slurm') text = buildSlurmScript(slurm, slurmAdv);
   if (mode.value === 'slurm-array') text = buildArrayScript(slurmArray);
+  if (mode.value === 'slurm' && !slurmTimeValid.value) {
+    showToast('時間超過所選 partition 的限制，請調整後再複製。', 'error');
+    return;
+  }
   handleCopy(text, event);
 };
 
 const downloadSlurm = () => {
+  if (!slurmTimeValid.value) {
+    showToast('時間超過所選 partition 的限制，請調整後再下載。', 'error');
+    return;
+  }
   const blob = new Blob([buildSlurmScript(slurm, slurmAdv)], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = slurm.scriptName || 'run.slurm';
   a.click();
   URL.revokeObjectURL(a.href);
+};
+
+// Wrappers to allow click even when logically 'disabled' so we can show a toast
+const copySlurmPreview = (event) => {
+  if (!slurmTimeValid.value) {
+    showToast('時間超過所選 partition 的限制，請調整後再複製。', 'error');
+    return;
+  }
+  handleCopy(() => buildSlurmScript(slurm, slurmAdv), event);
+};
+
+const onCopyGenerate = (event) => {
+  if (!slurmTimeValid.value) {
+    showToast('時間超過所選 partition 的限制，請調整後再複製。', 'error');
+    return;
+  }
+  handleCopy(generateWriteSlurmCmd, event);
+};
+
+const onCopySbatch = (event) => {
+  if (!slurmTimeValid.value) {
+    showToast('時間超過所選 partition 的限制，請調整後再複製。', 'error');
+    return;
+  }
+  handleCopy(`sbatch ${slurm.scriptName}`, event);
+};
+
+const tryDownloadSlurm = () => {
+  if (!slurmTimeValid.value) {
+    showToast('時間超過所選 partition 的限制，請調整後再下載。', 'error');
+    return;
+  }
+  downloadSlurm();
 };
 
 // --- Server Management Logic ---
@@ -1053,6 +1160,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
           <div class="form-group">
             <label>時間限制 (Time HH:MM:SS)</label>
             <input type="text" v-model="slurm.time" placeholder="01:00:00" />
+            <small v-if="!slurmTimeValid" class="error-text" style="color:#ff6b6b; display:block; margin-top:6px;">選取的 partition 最大時間為 {{ slurmData.partitionLimits[slurm.partition] || '未知' }}，請輸入較小的時間。</small>
           </div>
         </div>
         <div class="inline">
@@ -1160,7 +1268,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         </div>
         <div v-if="showSlurmPreview" class="result-box">
           <div class="btn-row">
-            <button class="copy-btn" @click="navigator.clipboard.writeText(buildSlurmScript(slurm, slurmAdv)); alert('腳本內容已複製！');">複製內容</button>
+            <button class="copy-btn" @click="copySlurmPreview($event)">複製內容</button>
           </div>
           <pre>{{ buildSlurmScript(slurm, slurmAdv) }}</pre>
         </div>
@@ -1419,7 +1527,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <div class="code-block">
           <div class="code-header">
             <span>產生腳本 (Write Script)</span>
-            <button class="copy-btn" @click="handleCopy(generateWriteSlurmCmd, $event)">複製</button>
+            <button class="copy-btn" @click="onCopyGenerate($event)">複製</button>
           </div>
           <pre>{{ generateWriteSlurmCmd }}</pre>
         </div>
@@ -1427,13 +1535,13 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <div class="code-block" style="margin-top: 16px;">
           <div class="code-header">
             <span>提交作業 (Submit Job)</span>
-            <button class="copy-btn" @click="handleCopy(`sbatch ${slurm.scriptName}`, $event)">複製</button>
+            <button class="copy-btn" @click="onCopySbatch($event)">複製</button>
           </div>
           <pre>$ sbatch {{ slurm.scriptName }}</pre>
         </div>
 
         <div class="btn-row" style="position: static; margin-top: 16px;">
-          <button class="copy-btn" @click="downloadSlurm">下載腳本檔案</button>
+          <button class="copy-btn" @click="tryDownloadSlurm">下載腳本檔案</button>
         </div>
       </div>
 
