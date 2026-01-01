@@ -40,6 +40,15 @@ export const buildMpiCmd = (mpi, rankfileText) => {
   return cmd.trim();
 };
 
+export const buildNvprofCmd = (nvprof) => {
+  let cmd = `nvprof`;
+  if (nvprof.output) cmd += ` -o ${nvprof.output}`;
+  if (nvprof.printSummary) cmd += ` --print-summary`;
+  if (nvprof.printGpuTrace) cmd += ` --print-gpu-trace`;
+  cmd += ` ${nvprof.executable}`;
+  return cmd;
+};
+
 export const buildNsysCmd = (nsys) => {
   let cmd = `nsys profile -o ${nsys.output}`;
   const traces = Array.isArray(nsys.selectedTraces) ? nsys.selectedTraces.filter(Boolean) : [];

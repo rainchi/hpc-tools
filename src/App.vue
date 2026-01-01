@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue';
-import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd } from './utils/builders';
+import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd } from './utils/builders';
 import CpuBinding from './components/CpuBinding.vue';
 import SystemInfoViewer from './components/SystemInfoViewer.vue';
 import ApptainerBuilder from './components/ApptainerBuilder.vue';
@@ -372,14 +372,8 @@ const generatedCommand = computed(() => {
       return buildCompileCmd(compile);
     case 'sysinfo':
       return buildSysInfoCmd(sysinfo);
-    case 'nvprof': {
-      let cmd = `nvprof`;
-      if (nvprof.output) cmd += ` -o ${nvprof.output}`;
-      if (nvprof.printSummary) cmd += ` --print-summary`;
-      if (nvprof.printGpuTrace) cmd += ` --print-gpu-trace`;
-      cmd += ` ${nvprof.executable}`;
-      return cmd;
-    }
+    case 'nvprof':
+      return buildNvprofCmd(nvprof);
     case 'nsys':
       return buildNsysCmd(nsys);
     case 'ncu':
@@ -430,6 +424,71 @@ const sendApptainerToMpi = () => {
 
 const sendApptainerToSlurm = () => {
   slurm.run = buildApptainerCmd(apptainer);
+  mode.value = 'slurm';
+};
+
+const sendCompileToSlurm = () => {
+  slurm.run = buildCompileCmd(compile);
+  mode.value = 'slurm';
+};
+
+const sendNvprofToMpi = () => {
+  mpi.executable = buildNvprofCmd(nvprof);
+  mode.value = 'mpi';
+};
+
+const sendNvprofToSlurm = () => {
+  slurm.run = buildNvprofCmd(nvprof);
+  mode.value = 'slurm';
+};
+
+const sendNsysToMpi = () => {
+  mpi.executable = buildNsysCmd(nsys);
+  mode.value = 'mpi';
+};
+
+const sendNsysToSlurm = () => {
+  slurm.run = buildNsysCmd(nsys);
+  mode.value = 'slurm';
+};
+
+const sendNcuToMpi = () => {
+  mpi.executable = buildNcuCmd(ncu);
+  mode.value = 'mpi';
+};
+
+const sendNcuToSlurm = () => {
+  slurm.run = buildNcuCmd(ncu);
+  mode.value = 'slurm';
+};
+
+const sendPerfToMpi = () => {
+  mpi.executable = buildPerfCmd(perf);
+  mode.value = 'mpi';
+};
+
+const sendPerfToSlurm = () => {
+  slurm.run = buildPerfCmd(perf);
+  mode.value = 'slurm';
+};
+
+const sendValgrindToMpi = () => {
+  mpi.executable = buildValgrindCmd(valgrind);
+  mode.value = 'mpi';
+};
+
+const sendValgrindToSlurm = () => {
+  slurm.run = buildValgrindCmd(valgrind);
+  mode.value = 'slurm';
+};
+
+const sendCudaMemcheckToMpi = () => {
+  mpi.executable = buildCudaMemcheckCmd(cudaMem);
+  mode.value = 'mpi';
+};
+
+const sendCudaMemcheckToSlurm = () => {
+  slurm.run = buildCudaMemcheckCmd(cudaMem);
   mode.value = 'slurm';
 };
 
@@ -1337,9 +1396,32 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
       <div class="result-box" v-else-if="mode !== 'apptainer-builder'">
         <div class="btn-row">
           <button class="copy-btn" @click="copyToClipboard">複製</button>
-          <button v-if="mode === 'apptainer'" class="copy-btn" @click="sendApptainerToMpi">傳送到 MPI Runner</button>
-          <button v-if="mode === 'apptainer'" class="copy-btn" @click="sendApptainerToSlurm">傳送到 Slurm</button>
-          <button v-if="mode === 'mpi'" class="copy-btn" @click="sendMpiToSlurm">傳送到 Slurm</button>
+          
+          <!-- Send to MPI -->
+          <button v-if="['apptainer', 'nvprof', 'nsys', 'ncu', 'perf', 'valgrind', 'cuda-memcheck'].includes(mode)" 
+                  class="copy-btn" @click="() => {
+                    if (mode === 'apptainer') sendApptainerToMpi();
+                    if (mode === 'nvprof') sendNvprofToMpi();
+                    if (mode === 'nsys') sendNsysToMpi();
+                    if (mode === 'ncu') sendNcuToMpi();
+                    if (mode === 'perf') sendPerfToMpi();
+                    if (mode === 'valgrind') sendValgrindToMpi();
+                    if (mode === 'cuda-memcheck') sendCudaMemcheckToMpi();
+                  }">傳送到 MPI Runner</button>
+          
+          <!-- Send to Slurm -->
+          <button v-if="['apptainer', 'mpi', 'compile', 'nvprof', 'nsys', 'ncu', 'perf', 'valgrind', 'cuda-memcheck'].includes(mode)" 
+                  class="copy-btn" @click="() => {
+                    if (mode === 'apptainer') sendApptainerToSlurm();
+                    if (mode === 'mpi') sendMpiToSlurm();
+                    if (mode === 'compile') sendCompileToSlurm();
+                    if (mode === 'nvprof') sendNvprofToSlurm();
+                    if (mode === 'nsys') sendNsysToSlurm();
+                    if (mode === 'ncu') sendNcuToSlurm();
+                    if (mode === 'perf') sendPerfToSlurm();
+                    if (mode === 'valgrind') sendValgrindToSlurm();
+                    if (mode === 'cuda-memcheck') sendCudaMemcheckToSlurm();
+                  }">傳送到 Slurm</button>
         </div>
         $ {{ generatedCommand }}
       </div>
