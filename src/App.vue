@@ -262,6 +262,57 @@ const showSlurmPreview = ref(false);
 const sidebarCollapsed = ref(false);
 const searchQuery = ref('');
 
+// Toast state
+const toast = reactive({
+  show: false,
+  message: '',
+  type: 'info'
+});
+
+const showToast = (msg, type = 'info') => {
+  toast.message = msg;
+  toast.type = type;
+  toast.show = true;
+  setTimeout(() => {
+    toast.show = false;
+  }, 3000);
+};
+
+// Modal state
+const modal = reactive({
+  show: false,
+  title: '',
+  message: '',
+  inputValue: '',
+  showInput: false,
+  confirmText: '確定',
+  cancelText: '取消',
+  onConfirm: null,
+  isDanger: false
+});
+
+const openModal = (opts) => {
+  modal.title = opts.title || '提示';
+  modal.message = opts.message || '';
+  modal.inputValue = opts.defaultValue || '';
+  modal.showInput = opts.showInput || false;
+  modal.confirmText = opts.confirmText || '確定';
+  modal.isDanger = opts.isDanger || false;
+  modal.onConfirm = opts.onConfirm;
+  modal.show = true;
+};
+
+const closeModal = () => {
+  modal.show = false;
+};
+
+const handleModalConfirm = () => {
+  if (modal.onConfirm) {
+    modal.onConfirm(modal.showInput ? modal.inputValue : true);
+  }
+  closeModal();
+};
+
 const modes = [
   { key: 'mpi', label: 'MPI Runner' },
   { key: 'sysinfo', label: 'System Info Viewer' },
@@ -441,32 +492,81 @@ const switchServer = (newId) => {
 };
 
 const addServer = () => {
-  const name = prompt('請輸入新伺服器名稱:');
-  if (name) {
-    const id = 'server_' + Date.now();
-    servers.value.push({ id, name });
-    saveCurrentServerData();
-    switchServer(id);
-  }
+  openModal({
+    title: '新增伺服器',
+    message: '請輸入新伺服器的名稱：',
+    showInput: true,
+    defaultValue: '新伺服器',
+    onConfirm: (name) => {
+      if (name && name.trim()) {
+        const id = 'server_' + Date.now();
+        servers.value.push({ id, name: name.trim() });
+        saveCurrentServerData();
+        switchServer(id);
+        showToast('已新增伺服器');
+      }
+    }
+  });
 };
 
 const renameServer = () => {
   const server = servers.value.find(s => s.id === currentServerId.value);
   if (!server || server.id === 'default') return;
-  const newName = prompt('重新命名伺服器:', server.name);
-  if (newName) {
-    server.name = newName;
-    saveCurrentServerData();
-  }
+  
+  openModal({
+    title: '重新命名伺服器',
+    message: '請輸入新的名稱：',
+    showInput: true,
+    defaultValue: server.name,
+    onConfirm: (newName) => {
+      if (newName && newName.trim()) {
+        server.name = newName.trim();
+        saveCurrentServerData();
+        showToast('已重新命名');
+      }
+    }
+  });
 };
 
 const deleteServer = () => {
   if (currentServerId.value === 'default') return;
-  if (confirm('確定要刪除此伺服器設定嗎？')) {
-    const idx = servers.value.findIndex(s => s.id === currentServerId.value);
-    localStorage.removeItem(`hpc_tools_data_${currentServerId.value}`);
-    servers.value.splice(idx, 1);
-    switchServer('default');
+  
+  openModal({
+    title: '刪除伺服器',
+    message: `確定要刪除「${servers.value.find(s => s.id === currentServerId.value)?.name}」及其所有設定嗎？此動作無法復原。`,
+    isDanger: true,
+    confirmText: '刪除',
+    onConfirm: () => {
+      const idx = servers.value.findIndex(s => s.id === currentServerId.value);
+      localStorage.removeItem(`hpc_tools_data_${currentServerId.value}`);
+      servers.value.splice(idx, 1);
+      switchServer('default');
+      showToast('已刪除伺服器');
+    }
+  });
+};
+
+const shareState = () => {
+  const data = {
+    mode: mode.value,
+    state: {}
+  };
+  for (const key in serverState) {
+    data.state[key] = JSON.parse(JSON.stringify(serverState[key]));
+  }
+  try {
+    const json = JSON.stringify(data);
+    // Use a safe way to encode Unicode to Base64
+    const encoded = btoa(unescape(encodeURIComponent(json)));
+    const url = new URL(window.location.href);
+    url.hash = `share=${encoded}`;
+    
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      showToast('分享連結已複製到剪貼簿！');
+    });
+  } catch (e) {
+    showToast('分享失敗：設定內容過大或包含不支援的字元。', 'error');
+    console.error(e);
   }
 };
 
@@ -482,6 +582,22 @@ if (savedId && servers.value.find(s => s.id === savedId)) {
   if (savedData) applyState(JSON.parse(savedData));
 }
 
+// Handle Shared URL
+const hash = window.location.hash;
+if (hash.startsWith('#share=')) {
+  try {
+    const encoded = hash.substring(7);
+    const json = decodeURIComponent(escape(atob(encoded)));
+    const data = JSON.parse(json);
+    if (data.mode) mode.value = data.mode;
+    if (data.state) applyState(data.state);
+    // Optional: clear hash after loading to keep URL clean
+    window.history.replaceState(null, null, window.location.pathname);
+  } catch (e) {
+    console.error('Failed to load shared state', e);
+  }
+}
+
 watch([mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer], () => {
   saveCurrentServerData();
 }, { deep: true });
@@ -489,6 +605,40 @@ watch([mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, p
 
 <template>
   <div class="app-shell">
+    <transition name="toast">
+      <div v-if="toast.show" :class="['toast', toast.type]">
+        {{ toast.message }}
+      </div>
+    </transition>
+
+    <!-- Modal Overlay -->
+    <transition name="fade">
+      <div v-if="modal.show" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content">
+          <h3>{{ modal.title }}</h3>
+          <p v-if="modal.message">{{ modal.message }}</p>
+          <input 
+            v-if="modal.showInput" 
+            v-model="modal.inputValue" 
+            type="text" 
+            class="modal-input"
+            @keyup.enter="handleModalConfirm"
+            ref="modalInput"
+            autofocus
+          />
+          <div class="modal-actions">
+            <button class="modal-btn cancel" @click="closeModal">{{ modal.cancelText }}</button>
+            <button 
+              :class="['modal-btn confirm', { danger: modal.isDanger }]" 
+              @click="handleModalConfirm"
+            >
+              {{ modal.confirmText }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <aside :class="['sidebar', { collapsed: sidebarCollapsed }]">
       <div class="sidebar-header">
         <span class="brand">🚀 HPC Tools</span>
@@ -515,6 +665,7 @@ watch([mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, p
             </select>
             <button class="icon-btn" @click="addServer" title="新增伺服器">+</button>
           </div>
+          <button class="share-btn" @click="shareState">📤 分享當前設定連結</button>
           <div class="server-actions" v-if="currentServerId !== 'default'">
             <button @click="renameServer">重新命名</button>
             <button @click="deleteServer" class="danger">刪除</button>
@@ -1560,6 +1711,25 @@ hr {
   color: #e6e9ef;
 }
 
+.share-btn {
+  width: 100%;
+  margin-bottom: 8px;
+  background: #1f6feb22;
+  border: 1px solid #1f6feb44;
+  color: #58a6ff;
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.share-btn:hover {
+  background: #1f6feb44;
+  border-color: #58a6ff;
+  color: #fff;
+}
+
 .icon-btn {
   background: #21262d;
   border: 1px solid #30363d;
@@ -1578,6 +1748,130 @@ hr {
 .icon-btn:hover {
   background: #30363d;
   color: #fff;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 12px 24px;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.toast.error {
+  background: #f85149;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -20px);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h3 {
+  margin: 0 0 12px;
+  color: #fff;
+}
+
+.modal-content p {
+  color: #8b949e;
+  margin-bottom: 20px;
+}
+
+.modal-input {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.modal-btn.cancel {
+  background: transparent;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+}
+
+.modal-btn.cancel:hover {
+  background: #21262d;
+  border-color: #8b949e;
+}
+
+.modal-btn.confirm {
+  background: #238636;
+  border: 1px solid rgba(240, 246, 252, 0.1);
+  color: #fff;
+}
+
+.modal-btn.confirm:hover {
+  background: #2ea043;
+}
+
+.modal-btn.confirm.danger {
+  background: #da3633;
+}
+
+.modal-btn.confirm.danger:hover {
+  background: #f85149;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .server-actions {
