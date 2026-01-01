@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue';
-import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd } from './utils/builders';
+import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd } from './utils/builders';
 import CpuBinding from './components/CpuBinding.vue';
 import SystemInfoViewer from './components/SystemInfoViewer.vue';
 import ApptainerBuilder from './components/ApptainerBuilder.vue';
@@ -20,6 +20,17 @@ const mpi = reactive({
   omp: 1,
   envExtra: '',
   executable: './main',
+});
+
+const compile = reactive({
+  compiler: 'gcc',
+  output: 'app.out',
+  src: 'main.c',
+  optimization: '-O3',
+  march: 'native',
+  openmp: false,
+  libraries: [],
+  customFlags: '',
 });
 
 const nvprof = reactive({
@@ -315,6 +326,7 @@ const handleModalConfirm = () => {
 
 const modes = [
   { key: 'mpi', label: 'MPI Runner' },
+  { key: 'compile', label: 'Compiler (gcc/nvcc)' },
   { key: 'sysinfo', label: 'System Info Viewer' },
   { key: 'nvprof', label: 'NVIDIA Profiler (nvprof)' },
   { key: 'nsys', label: 'Nsight Systems (nsys)' },
@@ -347,6 +359,8 @@ const generatedCommand = computed(() => {
   switch (mode.value) {
     case 'mpi':
       return buildMpiCmd(mpi, rankfileTextVal.value);
+    case 'compile':
+      return buildCompileCmd(compile);
     case 'sysinfo':
       return buildSysInfoCmd(sysinfo);
     case 'nvprof': {
@@ -456,7 +470,7 @@ const currentServerId = ref('default');
 let isLoading = false;
 
 const serverState = {
-  mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer
+  mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer
 };
 
 const saveCurrentServerData = () => {
@@ -598,7 +612,7 @@ if (hash.startsWith('#share=')) {
   }
 }
 
-watch([mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer], () => {
+watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer], () => {
   saveCurrentServerData();
 }, { deep: true });
 </script>
@@ -749,6 +763,78 @@ watch([mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, p
           {{ rankfileTextVal }}
         </div>
         <small class="muted">OpenMPI 可用 --rankfile；Intel MPI 可對應 I_MPI_PIN_PROCESSOR_LIST；MPICH 可用 taskset/sched_setaffinity。</small>
+      </div>
+
+      <!-- Compiler Generator -->
+      <div v-if="mode === 'compile'">
+        <div class="form-group">
+          <label>編譯器 (Compiler)</label>
+          <select v-model="compile.compiler">
+            <option value="gcc">GCC (gcc/g++)</option>
+            <option value="icc">Intel C++ (icc/icpc)</option>
+            <option value="nvcc">NVIDIA CUDA (nvcc)</option>
+          </select>
+        </div>
+
+        <div class="inline">
+          <div class="form-group">
+            <label>輸出檔名 (-o)</label>
+            <input type="text" v-model="compile.output" placeholder="例如: app.out" />
+          </div>
+          <div class="form-group">
+            <label>優化等級 (Optimization)</label>
+            <select v-model="compile.optimization">
+              <option value="-O0">-O0 (無優化)</option>
+              <option value="-O1">-O1</option>
+              <option value="-O2">-O2</option>
+              <option value="-O3">-O3 (強烈建議)</option>
+              <option value="-Ofast">-Ofast (不安全優化)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="inline">
+          <div class="form-group">
+            <label>架構優化 (-march)</label>
+            <input type="text" v-model="compile.march" placeholder="例如: native, znver3, cascadelake" />
+          </div>
+          <div class="form-group">
+            <label>其他旗標 (Custom Flags)</label>
+            <input type="text" v-model="compile.customFlags" placeholder="例如: -g -Wall" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>平行運算與函式庫</label>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" v-model="compile.openmp" />
+              啟用 OpenMP
+            </label>
+            <label>
+              <input type="checkbox" :checked="compile.libraries.includes('mkl')" @change="e => e.target.checked ? compile.libraries.push('mkl') : compile.libraries = compile.libraries.filter(l => l !== 'mkl')" />
+              Intel MKL
+            </label>
+            <label>
+              <input type="checkbox" :checked="compile.libraries.includes('openblas')" @change="e => e.target.checked ? compile.libraries.push('openblas') : compile.libraries = compile.libraries.filter(l => l !== 'openblas')" />
+              OpenBLAS
+            </label>
+            <label>
+              <input type="checkbox" :checked="compile.libraries.includes('fftw3')" @change="e => e.target.checked ? compile.libraries.push('fftw3') : compile.libraries = compile.libraries.filter(l => l !== 'fftw3')" />
+              FFTW3
+            </label>
+            <label v-if="compile.compiler !== 'nvcc'">
+              <input type="checkbox" :checked="compile.libraries.includes('cuda')" @change="e => e.target.checked ? compile.libraries.push('cuda') : compile.libraries = compile.libraries.filter(l => l !== 'cuda')" />
+              CUDA Runtime
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>原始碼檔案 (Source files)</label>
+          <input type="text" v-model="compile.src" placeholder="例如: main.c utils.c" />
+        </div>
+        <small class="muted">提示：使用 MKL 時，若非 Intel 編譯器，會自動加入連結參數。-march=native 會針對當前機器架構進行優化。</small>
       </div>
 
       <!-- System Info Viewer -->

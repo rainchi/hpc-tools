@@ -235,3 +235,46 @@ export const buildApptainerCmd = (apt) => {
 
   return cmd;
 };
+
+export const buildCompileCmd = (c) => {
+  let cmd = `${c.compiler}`;
+  
+  if (c.output) cmd += ` -o ${c.output}`;
+  
+  if (c.optimization) cmd += ` ${c.optimization}`;
+  if (c.march) cmd += ` -march=${c.march}`;
+  
+  if (c.openmp) {
+    if (c.compiler === 'icc' || c.compiler === 'icpc') {
+      cmd += ' -qopenmp';
+    } else if (c.compiler === 'nvcc') {
+      cmd += ' -Xcompiler -fopenmp';
+    } else {
+      cmd += ' -fopenmp';
+    }
+  }
+
+  if (c.libraries && Array.isArray(c.libraries)) {
+    c.libraries.forEach(lib => {
+      if (lib === 'mkl') {
+        if (c.compiler === 'icc' || c.compiler === 'icpc') {
+          cmd += ' -mkl';
+        } else {
+          cmd += ' -I${MKLROOT}/include -L${MKLROOT}/lib/intel64 -lmkl_rt';
+        }
+      } else if (lib === 'openblas') {
+        cmd += ' -lopenblas';
+      } else if (lib === 'fftw3') {
+        cmd += ' -lfftw3';
+      } else if (lib === 'cuda' && c.compiler !== 'nvcc') {
+        cmd += ' -lcudart';
+      }
+    });
+  }
+
+  if (c.customFlags) cmd += ` ${c.customFlags}`;
+  
+  if (c.src) cmd += ` ${c.src}`;
+  
+  return cmd.trim();
+};
