@@ -398,6 +398,93 @@ const downloadSlurm = () => {
   a.click();
   URL.revokeObjectURL(a.href);
 };
+
+// --- Server Management Logic ---
+const servers = ref([{ id: 'default', name: '預設伺服器' }]);
+const currentServerId = ref('default');
+let isLoading = false;
+
+const serverState = {
+  mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer
+};
+
+const saveCurrentServerData = () => {
+  if (isLoading) return;
+  const data = {};
+  for (const key in serverState) {
+    data[key] = JSON.parse(JSON.stringify(serverState[key]));
+  }
+  localStorage.setItem(`hpc_tools_data_${currentServerId.value}`, JSON.stringify(data));
+  localStorage.setItem('hpc_tools_servers', JSON.stringify(servers.value));
+  localStorage.setItem('hpc_tools_current_id', currentServerId.value);
+};
+
+const applyState = (data) => {
+  if (!data) return;
+  isLoading = true;
+  for (const key in serverState) {
+    if (data[key]) {
+      Object.assign(serverState[key], data[key]);
+    }
+  }
+  setTimeout(() => { isLoading = false; }, 50);
+};
+
+const switchServer = (newId) => {
+  saveCurrentServerData();
+  currentServerId.value = newId;
+  const saved = localStorage.getItem(`hpc_tools_data_${newId}`);
+  if (saved) {
+    applyState(JSON.parse(saved));
+  }
+  localStorage.setItem('hpc_tools_current_id', newId);
+};
+
+const addServer = () => {
+  const name = prompt('請輸入新伺服器名稱:');
+  if (name) {
+    const id = 'server_' + Date.now();
+    servers.value.push({ id, name });
+    saveCurrentServerData();
+    switchServer(id);
+  }
+};
+
+const renameServer = () => {
+  const server = servers.value.find(s => s.id === currentServerId.value);
+  if (!server || server.id === 'default') return;
+  const newName = prompt('重新命名伺服器:', server.name);
+  if (newName) {
+    server.name = newName;
+    saveCurrentServerData();
+  }
+};
+
+const deleteServer = () => {
+  if (currentServerId.value === 'default') return;
+  if (confirm('確定要刪除此伺服器設定嗎？')) {
+    const idx = servers.value.findIndex(s => s.id === currentServerId.value);
+    localStorage.removeItem(`hpc_tools_data_${currentServerId.value}`);
+    servers.value.splice(idx, 1);
+    switchServer('default');
+  }
+};
+
+// Initialize
+const savedServers = localStorage.getItem('hpc_tools_servers');
+if (savedServers) {
+  servers.value = JSON.parse(savedServers);
+}
+const savedId = localStorage.getItem('hpc_tools_current_id');
+if (savedId && servers.value.find(s => s.id === savedId)) {
+  currentServerId.value = savedId;
+  const savedData = localStorage.getItem(`hpc_tools_data_${savedId}`);
+  if (savedData) applyState(JSON.parse(savedData));
+}
+
+watch([mpi, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer], () => {
+  saveCurrentServerData();
+}, { deep: true });
 </script>
 
 <template>
@@ -418,6 +505,22 @@ const downloadSlurm = () => {
           </li>
         </ul>
       </nav>
+
+      <div class="sidebar-footer" v-if="!sidebarCollapsed">
+        <div class="server-switcher">
+          <label>伺服器實例</label>
+          <div class="server-select-row">
+            <select :value="currentServerId" @change="switchServer($event.target.value)">
+              <option v-for="s in servers" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+            <button class="icon-btn" @click="addServer" title="新增伺服器">+</button>
+          </div>
+          <div class="server-actions" v-if="currentServerId !== 'default'">
+            <button @click="renameServer">重新命名</button>
+            <button @click="deleteServer" class="danger">刪除</button>
+          </div>
+        </div>
+      </div>
     </aside>
 
     <main class="content">
@@ -1425,5 +1528,84 @@ hr {
   .inline {
     grid-template-columns: 1fr;
   }
+}
+
+/* Server Switcher */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #30363d;
+}
+
+.server-switcher label {
+  display: block;
+  font-size: 0.8rem;
+  color: #8b949e;
+  margin-bottom: 8px;
+}
+
+.server-select-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.server-select-row select {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6e9ef;
+}
+
+.icon-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #30363d;
+  color: #fff;
+}
+
+.server-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.server-actions button {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 0.75rem;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.server-actions button:hover {
+  color: #fff;
+  border-color: #8b949e;
+  background: #21262d;
+}
+
+.server-actions button.danger:hover {
+  color: #f85149;
+  border-color: #f85149;
+  background: #f8514911;
 }
 </style>
