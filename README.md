@@ -1,38 +1,63 @@
-# hpc-tools
+# HPC Tools 🚀
 
-This template should help get you started developing with Vue 3 in Vite.
+HPC Tools is a web-based command generator designed specifically for High-Performance Computing (HPC) users. It helps users quickly generate complex commands for MPI, Slurm, profiling tools, and containers, reducing errors in manual script writing.
 
-## Recommended IDE Setup
+## Key Features
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **MPI Runner**: Supports OpenMPI, Intel MPI, and MPICH. Automatically generates core binding and hostfile parameters.
+- **Slurm Script Generator**: 
+  - Quickly generate `sbatch` scripts.
+  - Supports advanced flags (Memory, QoS, GPU binding, constraints).
+  - Supports Slurm Array jobs.
+- **Profiling Tools**:
+  - **NVIDIA**: Supports Nsight Systems (`nsys`), Nsight Compute (`ncu`), and legacy `nvprof`.
+  - **CPU**: Supports `perf record`.
+  - **Debugging**: Supports `Valgrind` and `CUDA-MEMCHECK`.
+- **System Info Viewer**: Parses and visualizes HPC node hardware topology (lstopo), CPU, memory, and GPU information.
+- **Container Support (Apptainer / Singularity)**:
+  - Command Generator: Quickly generate `exec`, `run`, and `shell` commands.
+  - **Apptainer Builder**: Interactive generator for Apptainer definition files (.def).
+- **Environment Modules**: Interactively select and generate `module load` commands.
+- **Data Transfer**: Supports `rsync` and `scp` command generation.
 
-## Recommended Browser Setup
+## Tech Stack
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- **Framework**: Vue 3 (Composition API)
+- **Build Tool**: Vite
+- **Styling**: Native CSS (Scoped)
 
-## Customize configuration
+## Development and Deployment
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+### Install Dependencies
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Local Development
 
 ```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+### Build for Production
 
 ```sh
 npm run build
 ```
+
+### Preview Production Build
+
+```sh
+npm run preview
+```
+
+## Project Structure
+
+- `src/App.vue`: Main application logic and UI layout.
+- `src/utils/builders.js`: Core command generation logic.
+- `src/components/`: Vue components for various features.
+  - `SystemInfoViewer.vue`: System information parsing and display.
+  - `ApptainerBuilder.vue`: Container definition file generator.
+  - `CpuBinding.vue`: MPI core binding helper tool.
+
