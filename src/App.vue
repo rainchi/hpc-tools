@@ -1168,6 +1168,12 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
 
       <!-- Slurm array -->
       <div v-if="mode === 'slurm-array'">
+        <div class="info-banner">
+          <strong>什麼是 Slurm Job Array？</strong><br/>
+          Job Array 用於一次提交大量性質相似的作業（例如參數掃描或批次處理數據）。<br/>
+          系統會為每個任務分配一個唯一的 ID，存放在環境變數 <code>$SLURM_ARRAY_TASK_ID</code> 中。
+        </div>
+
         <div class="inline">
           <div class="form-group">
             <label>陣列範圍 (--array)</label>
@@ -1189,6 +1195,15 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <div class="form-group">
           <label>腳本檔名</label>
           <input type="text" v-model="slurmArray.scriptName" placeholder="array.slurm" />
+        </div>
+
+        <div style="margin-top: 20px; border: 1px solid #30363d; border-radius: 8px; padding: 12px; background: rgba(255,255,255,0.02);">
+          <h4 style="margin-top: 0; color: #fff; font-size: 0.95rem;">範例用法 (Example Usage)</h4>
+          <ul style="color: #8b949e; font-size: 0.85rem; padding-left: 20px; margin-bottom: 0;">
+            <li><strong>處理多個檔案：</strong> <code>./process.py data_${SLURM_ARRAY_TASK_ID}.csv</code></li>
+            <li><strong>限制同時執行數：</strong> 範圍設為 <code>0-99%10</code> (總共 100 個任務，最多同時跑 10 個)</li>
+            <li><strong>命名規則：</strong> <code>%A</code> 是主作業 ID，<code>%a</code> 是陣列任務索引。</li>
+          </ul>
         </div>
       </div>
 
