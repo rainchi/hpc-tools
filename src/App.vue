@@ -1,0 +1,1429 @@
+<script setup>
+import { reactive, computed, ref, watch } from 'vue';
+import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd } from './utils/builders';
+import CpuBinding from './components/CpuBinding.vue';
+import SystemInfoViewer from './components/SystemInfoViewer.vue';
+import ApptainerBuilder from './components/ApptainerBuilder.vue';
+import Combobox from './components/Combobox.vue';
+
+// State
+const mode = ref('mpi');
+
+const mpi = reactive({
+  type: 'openmpi',
+  np: 4,
+  ppn: 2,
+  hostfile: '',
+  showMap: false,
+  byNode: false,
+  bindToCore: false,
+  omp: 1,
+  envExtra: '',
+  executable: './main',
+});
+
+const nvprof = reactive({
+  output: 'output.nvvp',
+  printSummary: true,
+  printGpuTrace: false,
+  executable: './cuda_main',
+});
+
+const nsys = reactive({
+  output: 'profile',
+  summary: true,
+  sample: false,
+  executable: './cuda_app',
+  selectedTraces: [],
+});
+
+const ncu = reactive({
+  output: 'report.ncu-rep',
+  set: 'full',
+  kernelRegex: '.*',
+  executable: './cuda_app',
+});
+
+const slurm = reactive({
+  jobName: 'myjob',
+  partition: 'gpu',
+  account: '',
+  time: '01:00:00',
+  nodes: 1,
+  ntasksPerNode: 4,
+  omp: 1,
+  gpusPerNode: 0,
+  modules: 'gcc/12.2 openmpi/4.1.5 cuda/12.3',
+  env: 'OMP_NUM_THREADS=1',
+  run: 'mpirun -np 4 ./a.out',
+  scriptName: 'run.slurm',
+});
+
+const slurmAdv = reactive({
+  mem: '',
+  qos: '',
+  gpuBind: '',
+  constraint: '',
+  exclusive: false,
+  profile: false,
+});
+
+const slurmArray = reactive({
+  range: '0-9%2',
+  outFmt: '%x.%A.%a.out',
+  errFmt: '%x.%A.%a.err',
+  run: './run.sh ${SLURM_ARRAY_TASK_ID}',
+  scriptName: 'array.slurm',
+});
+
+const transfer = reactive({
+  src: './data/',
+  dst: 'user@server:/path/',
+  useRsync: true,
+  compress: true,
+  progress: true,
+  archive: true,
+  checksum: true,
+  delete: false,
+});
+
+const modules = reactive({
+  load: '',
+  unload: '',
+  availOutput: '',
+  selected: [],
+  filter: '',
+});
+
+const availableModules = computed(() => {
+  if (!modules.availOutput) return [];
+  const text = modules.availOutput;
+
+  // Split by whitespace to handle both single-line and multi-line output
+  const tokens = text.split(/\s+/);
+  const groups = {};
+
+  tokens.forEach(t => {
+    t = t.trim();
+    if (!t) return;
+    if (t.endsWith(':')) return; // Path header
+    if (t.startsWith('---')) return; // Separator
+    if (t === '->') return; // Alias arrow
+
+    let m = t.replace(/\(default\)$/, '').replace(/\(D\)$/, '').replace(/\(L\)$/, '');
+
+    const slashIdx = m.indexOf('/');
+    if (slashIdx > -1) {
+        const pkg = m.substring(0, slashIdx);
+        const ver = m.substring(slashIdx + 1);
+
+        if (!groups[pkg]) groups[pkg] = new Set();
+        if (ver) groups[pkg].add(ver);
+    } else {
+        // No slash
+        if (!groups[m]) groups[m] = new Set();
+        groups[m].add(''); // Represents the package itself
+    }
+  });
+
+  return Object.keys(groups).sort().map(pkg => {
+      return {
+          name: pkg,
+          versions: Array.from(groups[pkg]).sort()
+      };
+  });
+});
+
+const filteredModules = computed(() => {
+    const all = availableModules.value;
+    if (!modules.filter) return all;
+
+    const q = modules.filter.toLowerCase();
+    return all.map(pkg => {
+        if (pkg.name.toLowerCase().includes(q)) return pkg;
+
+        const matchingVers = pkg.versions.filter(v => v.toLowerCase().includes(q));
+        if (matchingVers.length) {
+            return { name: pkg.name, versions: matchingVers };
+        }
+        return null;
+    }).filter(Boolean);
+});
+
+const perf = reactive({
+  freq: 999,
+  callGraph: 'dwarf',
+  output: 'perf.data',
+  executable: './app',
+});
+
+const valgrind = reactive({
+  tool: 'memcheck',
+  leak: 'full',
+  logFmt: 'valgrind.%p.log',
+  executable: './app',
+});
+
+const cudaMem = reactive({
+  tool: 'memcheck',
+  executable: './cuda_app',
+});
+
+const sysinfo = reactive({
+  useBase64: false,
+  rawOutput: '',
+  collectOs: true,
+  collectCpu: true,
+  collectMem: true,
+  collectEnv: true,
+  collectLstopo: true,
+  collectNvidia: true,
+  collectAmd: false,
+  collectSlurm: false,
+});
+
+const slurmData = reactive({
+  partitions: [],
+  accounts: [],
+  qos: [],
+  fetched: false
+});
+
+watch(() => sysinfo.rawOutput, (newVal) => {
+  if (!newVal) return;
+  let text = newVal.trim();
+  if (!text.includes('===HPC_TOOLS_START===')) {
+    try {
+      text = atob(text.replace(/\s/g, ''));
+    } catch (e) { }
+  }
+
+  if (text.includes('---SECTION:SLURM_PARTITIONS---')) {
+    const partMatch = text.match(/---SECTION:SLURM_PARTITIONS---([\s\S]*?)(---SECTION|$)/);
+    if (partMatch) {
+      const parts = partMatch[1].trim().split(/\r?\n/).filter(l => l && l !== 'SINFO_FAILED');
+      slurmData.partitions = parts.map(p => p.replace('*', ''));
+      slurmData.fetched = true;
+    }
+  }
+
+  if (text.includes('---SECTION:SLURM_ACCOUNTS---')) {
+    const accMatch = text.match(/---SECTION:SLURM_ACCOUNTS---([\s\S]*?)(---SECTION|$)/);
+    if (accMatch) {
+      const accs = accMatch[1].trim().split(/\r?\n/).filter(l => l && l !== 'SACCTMGR_FAILED');
+      slurmData.accounts = accs.map(a => a.split('|')[0]);
+      slurmData.fetched = true;
+    }
+  }
+
+  if (text.includes('---SECTION:SLURM_QOS---')) {
+    const qosMatch = text.match(/---SECTION:SLURM_QOS---([\s\S]*?)(---SECTION|$)/);
+    if (qosMatch) {
+      const qosList = qosMatch[1].trim().split(/\r?\n/).filter(l => l && l !== 'SACCTMGR_FAILED');
+      slurmData.qos = qosList.map(q => q.split('|')[0]);
+      slurmData.fetched = true;
+    }
+  }
+});
+
+const apptainer = reactive({
+  command: 'exec',
+  image: 'image.sif',
+  options: '',
+  binds: '',
+  writable: false,
+  nv: false,
+  rocm: false,
+  executable: './app',
+});
+
+const onSysInfoPaste = (event) => {
+  const text = event.clipboardData.getData('text');
+  if (!text) return;
+
+  // If the text is NOT explicitly our format (plain text), try to decode it
+  if (!text.includes('===HPC_TOOLS_START===')) {
+    try {
+      const decoded = atob(text.replace(/\s/g, ''));
+      if (decoded.includes('===HPC_TOOLS_START===')) {
+        event.preventDefault();
+        sysinfo.rawOutput = decoded;
+      }
+    } catch (e) {
+      // Ignore errors, let default paste handle it
+    }
+  }
+};
+
+const rankfileTextVal = ref('');
+const showSlurmPreview = ref(false);
+
+// Sidebar state and search
+const sidebarCollapsed = ref(false);
+const searchQuery = ref('');
+
+const modes = [
+  { key: 'mpi', label: 'MPI Runner' },
+  { key: 'sysinfo', label: 'System Info Viewer' },
+  { key: 'nvprof', label: 'NVIDIA Profiler (nvprof)' },
+  { key: 'nsys', label: 'Nsight Systems (nsys)' },
+  { key: 'ncu', label: 'Nsight Compute (ncu)' },
+  { key: 'slurm', label: 'Slurm sbatch' },
+  { key: 'slurm-adv', label: 'Slurm 進階' },
+  { key: 'slurm-array', label: 'Slurm 陣列' },
+  { key: 'perf', label: 'CPU Profiling (perf)' },
+  { key: 'valgrind', label: 'Valgrind' },
+  { key: 'cuda-memcheck', label: 'CUDA-MEMCHECK' },
+  { key: 'transfer', label: 'Rsync / SCP' },
+  { key: 'apptainer', label: 'Apptainer / Singularity' },
+  { key: 'apptainer-builder', label: 'Apptainer Builder' },
+  { key: 'modules', label: 'Environment Modules' },
+];
+
+const filteredModes = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return modes;
+  return modes.filter(m => m.label.toLowerCase().includes(q) || m.key.toLowerCase().includes(q));
+});
+
+const currentModeLabel = computed(() => {
+  const found = modes.find(m => m.key === mode.value);
+  return found ? found.label : 'HPC 指令產生器';
+});
+
+// Helpers
+const generatedCommand = computed(() => {
+  switch (mode.value) {
+    case 'mpi':
+      return buildMpiCmd(mpi, rankfileTextVal.value);
+    case 'sysinfo':
+      return buildSysInfoCmd(sysinfo);
+    case 'nvprof': {
+      let cmd = `nvprof`;
+      if (nvprof.output) cmd += ` -o ${nvprof.output}`;
+      if (nvprof.printSummary) cmd += ` --print-summary`;
+      if (nvprof.printGpuTrace) cmd += ` --print-gpu-trace`;
+      cmd += ` ${nvprof.executable}`;
+      return cmd;
+    }
+    case 'nsys':
+      return buildNsysCmd(nsys);
+    case 'ncu':
+      return buildNcuCmd(ncu);
+    case 'slurm':
+      return `sbatch ${slurm.scriptName}`;
+    case 'slurm-adv':
+      return (
+        '# 使用下列旗標加入 sbatch 腳本: ' +
+        [
+          '--mem',
+          slurmAdv.mem,
+          '--qos',
+          slurmAdv.qos,
+          '--gpu-bind',
+          slurmAdv.gpuBind,
+          '--constraint',
+          slurmAdv.constraint,
+          slurmAdv.exclusive ? '--exclusive' : '',
+          slurmAdv.profile ? '--profile' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+      );
+    case 'slurm-array':
+      return `sbatch ${slurmArray.scriptName}`;
+    case 'perf':
+      return buildPerfCmd(perf);
+    case 'valgrind':
+      return buildValgrindCmd(valgrind);
+    case 'cuda-memcheck':
+      return buildCudaMemcheckCmd(cudaMem);
+    case 'transfer':
+      return buildTransferCmd(transfer);
+    case 'apptainer':
+      return buildApptainerCmd(apptainer);
+    case 'modules':
+      return buildModulesCmd(modules);
+    default:
+      return '';
+  }
+});
+
+const sendApptainerToMpi = () => {
+  mpi.executable = buildApptainerCmd(apptainer);
+  mode.value = 'mpi';
+};
+
+const sendApptainerToSlurm = () => {
+  slurm.run = buildApptainerCmd(apptainer);
+  mode.value = 'slurm';
+};
+
+const sendMpiToSlurm = () => {
+  slurm.run = buildMpiCmd(mpi, rankfileTextVal.value);
+  mode.value = 'slurm';
+};
+
+const generateWriteSlurmCmd = computed(() => {
+  const script = buildSlurmScript(slurm, slurmAdv);
+  return `cat << 'EOF' > ${slurm.scriptName}\n${script}\nEOF`;
+});
+
+const handleCopy = (text, event) => {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    const originalText = btn.innerText;
+    btn.innerText = '已複製！';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }, 2000);
+  });
+};
+
+const copyToClipboard = (event) => {
+  let text = generatedCommand.value;
+  if (mode.value === 'slurm') text = buildSlurmScript(slurm, slurmAdv);
+  if (mode.value === 'slurm-array') text = buildArrayScript(slurmArray);
+  handleCopy(text, event);
+};
+
+const downloadSlurm = () => {
+  const blob = new Blob([buildSlurmScript(slurm, slurmAdv)], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = slurm.scriptName || 'run.slurm';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+</script>
+
+<template>
+  <div class="app-shell">
+    <aside :class="['sidebar', { collapsed: sidebarCollapsed }]">
+      <div class="sidebar-header">
+        <span class="brand">🚀 HPC Tools</span>
+        <button class="toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed">{{ sidebarCollapsed ? '➤' : '◀' }}</button>
+      </div>
+      <div class="sidebar-search" v-if="!sidebarCollapsed">
+        <input type="text" v-model="searchQuery" placeholder="搜尋功能..." />
+      </div>
+      <nav class="sidebar-nav" :aria-label="'功能清單'">
+        <ul>
+          <li v-for="m in filteredModes" :key="m.key" :class="{ active: mode === m.key }" @click="mode = m.key">
+            <span class="item-label" v-if="!sidebarCollapsed">{{ m.label }}</span>
+            <span class="item-dot" v-else :title="m.label"></span>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="page-title"><h1>{{ currentModeLabel }}</h1></header>
+
+      <!-- Remove top tabs, selection moved to sidebar -->
+
+      <!-- MPI Runner -->
+      <div v-if="mode === 'mpi'">
+        <div class="form-group">
+          <label>MPI 實作版本 (Implementation)</label>
+          <select v-model="mpi.type">
+            <option value="openmpi">OpenMPI (ompi)</option>
+            <option value="intel">Intel MPI (impi)</option>
+            <option value="mpich">MPICH</option>
+          </select>
+        </div>
+
+        <div class="inline">
+          <div class="form-group">
+            <label>總核心數 (Total Ranks / -np)</label>
+            <input type="number" v-model.number="mpi.np" min="1" placeholder="例如: 4" />
+          </div>
+          <div class="form-group">
+            <label>每節點核心數 (per-node)</label>
+            <input type="number" v-model.number="mpi.ppn" min="1" placeholder="例如: 2" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Hostfile 路徑 (選填)</label>
+          <input type="text" v-model="mpi.hostfile" placeholder="例如: ./hostfile" />
+        </div>
+
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="show-map" v-model="mpi.showMap" />
+            <label for="show-map">顯示綁定資訊 (Display map/binding)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="bynode" v-model="mpi.byNode" />
+            <label for="bynode">按節點分配 (by-node)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="bind-to-core" v-model="mpi.bindToCore" />
+            <label for="bind-to-core">綁定到核心 (bind-to core)</label>
+          </div>
+        </div>
+
+        <div class="inline">
+          <div class="form-group">
+            <label>OMP_NUM_THREADS</label>
+            <input type="number" v-model.number="mpi.omp" min="1" placeholder="例如: 1" />
+          </div>
+          <div class="form-group">
+            <label>其他環境變數 (KEY=VALUE; 以空格分隔)</label>
+            <input type="text" v-model="mpi.envExtra" placeholder="CUDA_VISIBLE_DEVICES=0 NCCL_DEBUG=INFO" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>執行檔與參數</label>
+          <input type="text" v-model="mpi.executable" placeholder="./a.out arg1" />
+        </div>
+        <small class="muted">提示：OpenMPI 用 --bind-to；Intel MPI 可用 -genv；MPICH 用 -env</small>
+
+        <hr />
+        <CpuBinding v-model="rankfileTextVal" :mpiType="mpi.type" :hostfile="mpi.hostfile" />
+        <div v-if="rankfileTextVal" class="result-box">
+          <div class="btn-row">
+            <button class="copy-btn" @click="navigator.clipboard.writeText(rankfileTextVal); alert('rankfile 已複製！');">複製 rankfile</button>
+            <button class="copy-btn" @click="(() => { const blob = new Blob([rankfileTextVal], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'rankfile.txt'; a.click(); URL.revokeObjectURL(a.href); })()">下載 rankfile</button>
+          </div>
+          # 產生的 OpenMPI rankfile 預覽
+          {{ rankfileTextVal }}
+        </div>
+        <small class="muted">OpenMPI 可用 --rankfile；Intel MPI 可對應 I_MPI_PIN_PROCESSOR_LIST；MPICH 可用 taskset/sched_setaffinity。</small>
+      </div>
+
+      <!-- System Info Viewer -->
+      <div v-if="mode === 'sysinfo'">
+        <div class="form-group">
+          <label>指令選項</label>
+          <div class="checkbox-group">
+            <div>
+              <input type="checkbox" id="sysinfo-base64" v-model="sysinfo.useBase64" />
+              <label for="sysinfo-base64">使用 Base64 編碼 (避免複製貼上時的編碼問題)</label>
+            </div>
+          </div>
+
+          <label style="margin-top: 12px;">收集項目</label>
+          <div class="checkbox-group">
+             <label><input type="checkbox" v-model="sysinfo.collectOs"> OS / Kernel / Limits</label>
+             <label><input type="checkbox" v-model="sysinfo.collectCpu"> CPU Summary & Topology</label>
+             <label><input type="checkbox" v-model="sysinfo.collectMem"> Memory & NUMA</label>
+             <label><input type="checkbox" v-model="sysinfo.collectLstopo"> Hardware Topology (lstopo)</label>
+             <label><input type="checkbox" v-model="sysinfo.collectEnv"> Environment Variables & Modules</label>
+             <label><input type="checkbox" v-model="sysinfo.collectNvidia"> NVIDIA GPU (nvidia-smi)</label>
+             <label><input type="checkbox" v-model="sysinfo.collectAmd"> AMD GPU (rocm-smi)</label>
+             <label><input type="checkbox" v-model="sysinfo.collectSlurm"> Slurm Info (Partitions/QoS)</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>貼上輸出結果</label>
+          <textarea v-model="sysinfo.rawOutput" rows="8" placeholder="請將下方指令的執行結果貼到這裡..." @paste="onSysInfoPaste"></textarea>
+        </div>
+        <SystemInfoViewer :rawOutput="sysinfo.rawOutput" />
+      </div>
+
+      <!-- nvprof (legacy) -->
+      <div v-if="mode === 'nvprof'">
+        <small class="muted">nvprof 已被 Nsight 系列工具取代，建議改用 nsys / ncu。</small>
+        <div class="form-group">
+          <label>輸出檔案 (Output File)</label>
+          <input type="text" v-model="nvprof.output" placeholder="analysis.nvvp" />
+        </div>
+
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="print-summary" v-model="nvprof.printSummary" />
+            <label for="print-summary">Print Summary</label>
+          </div>
+          <div>
+            <input type="checkbox" id="print-gpu-trace" v-model="nvprof.printGpuTrace" />
+            <label for="print-gpu-trace">Print GPU Trace</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>目標執行檔</label>
+          <input type="text" v-model="nvprof.executable" placeholder="./cuda_app" />
+        </div>
+      </div>
+
+      <!-- Nsight Systems -->
+      <div v-if="mode === 'nsys'">
+        <div class="inline">
+          <div class="form-group">
+            <label>輸出檔案 (.nsys-rep)</label>
+            <input type="text" v-model="nsys.output" placeholder="profile" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>追蹤範圍 (Trace Domains)</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" :value="'cuda'" v-model="nsys.selectedTraces" /> CUDA：GPU 核心/記憶體活動</label>
+            <label><input type="checkbox" :value="'mpi'" v-model="nsys.selectedTraces" /> MPI：分散式通訊 (rank、collective)</label>
+            <label><input type="checkbox" :value="'nvtx'" v-model="nsys.selectedTraces" /> NVTX：自訂區段/範圍標記</label>
+            <label><input type="checkbox" :value="'osrt'" v-model="nsys.selectedTraces" /> OS Runtime：作業系統層 (執行緒/排程)</label>
+            <label><input type="checkbox" :value="'openmp'" v-model="nsys.selectedTraces" /> OpenMP：多執行緒平行區域</label>
+            <label><input type="checkbox" :value="'posix'" v-model="nsys.selectedTraces" /> POSIX：檔案 I/O 與系統呼叫</label>
+            <label><input type="checkbox" :value="'net'" v-model="nsys.selectedTraces" /> Network：網路 I/O</label>
+            <label><input type="checkbox" :value="'memory'" v-model="nsys.selectedTraces" /> Memory：記憶體配置/釋放</label>
+            <label><input type="checkbox" :value="'ipc'" v-model="nsys.selectedTraces" /> IPC：跨程序通訊</label>
+          </div>
+          <small class="muted">勾選想要觀察的領域；會自動組合成 --trace 參數。</small>
+        </div>
+
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="nsys-summary" v-model="nsys.summary" />
+            <label for="nsys-summary">產生摘要 (--summary=true)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="nsys-sample" v-model="nsys.sample" />
+            <label for="nsys-sample">CPU 抽樣 (--sample=cpu)</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>目標執行檔</label>
+          <input type="text" v-model="nsys.executable" placeholder="./cuda_app" />
+        </div>
+      </div>
+
+      <!-- Nsight Compute -->
+      <div v-if="mode === 'ncu'">
+        <div class="inline">
+          <div class="form-group">
+            <label>輸出檔案 (report)</label>
+            <input type="text" v-model="ncu.output" placeholder="report.ncu-rep" />
+          </div>
+          <div class="form-group">
+            <label>指標集合 (set)</label>
+            <input type="text" v-model="ncu.set" placeholder="full" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>選擇kernel (regex)</label>
+          <input type="text" v-model="ncu.kernelRegex" placeholder=".*" />
+        </div>
+        <div class="form-group">
+          <label>目標執行檔</label>
+          <input type="text" v-model="ncu.executable" placeholder="./cuda_app" />
+        </div>
+      </div>
+
+      <!-- Slurm sbatch generator -->
+      <div v-if="mode === 'slurm'">
+        <div class="info-banner" v-if="!slurmData.fetched">
+          💡 提示：您可以在「System Info Viewer」功能中收集 Slurm 資訊，即可在此處使用下拉選單選擇 Partition 與 Account。
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>作業名稱 (Job Name)</label>
+            <input type="text" v-model="slurm.jobName" placeholder="myjob" />
+          </div>
+          <div class="form-group">
+            <label>佇列/分區 (Partition)</label>
+            <Combobox v-model="slurm.partition" :options="slurmData.partitions" placeholder="gpu" />
+          </div>
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>帳號 (Account)</label>
+            <Combobox v-model="slurm.account" :options="slurmData.accounts" placeholder="project123" />
+          </div>
+          <div class="form-group">
+            <label>時間限制 (Time HH:MM:SS)</label>
+            <input type="text" v-model="slurm.time" placeholder="01:00:00" />
+          </div>
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>節點數 (Nodes)</label>
+            <input type="number" v-model.number="slurm.nodes" min="1" placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label>每節點核心數 (ntasks-per-node)</label>
+            <input type="number" v-model.number="slurm.ntasksPerNode" min="1" placeholder="4" />
+          </div>
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>每任務 threads (OMP_NUM_THREADS)</label>
+            <input type="number" v-model.number="slurm.omp" min="1" placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label>GPU 數量 (per-node)</label>
+            <input type="number" v-model.number="slurm.gpusPerNode" min="0" placeholder="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Modules (以空格分隔)</label>
+          <input type="text" v-model="slurm.modules" placeholder="gcc/12.2 openmpi/4.1.5 cuda/12.3" />
+        </div>
+        <div class="form-group">
+          <label>環境變數 (KEY=VALUE 空格分隔)</label>
+          <input type="text" v-model="slurm.env" placeholder="NCCL_DEBUG=INFO OMP_PLACES=cores" />
+        </div>
+        <div class="form-group">
+          <label>執行指令</label>
+          <input type="text" v-model="slurm.run" placeholder="mpirun -np 4 ./a.out" />
+        </div>
+        <div class="form-group">
+          <label>腳本檔名</label>
+          <input type="text" v-model="slurm.scriptName" placeholder="run.slurm" />
+        </div>
+        <small class="muted">提示：如需 GPU，請設定 --gpus-per-node 或在 Partition 指定 gpu 佇列。</small>
+
+        <hr />
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="show-slurm-preview" v-model="showSlurmPreview" />
+            <label for="show-slurm-preview">預覽腳本內容 (Preview Script)</label>
+          </div>
+        </div>
+        <div v-if="showSlurmPreview" class="result-box">
+          <div class="btn-row">
+            <button class="copy-btn" @click="navigator.clipboard.writeText(buildSlurmScript(slurm, slurmAdv)); alert('腳本內容已複製！');">複製內容</button>
+          </div>
+          <pre>{{ buildSlurmScript(slurm, slurmAdv) }}</pre>
+        </div>
+      </div>
+
+      <!-- Slurm advanced -->
+      <div v-if="mode === 'slurm-adv'">
+        <div class="inline">
+          <div class="form-group">
+            <label>記憶體限制 (--mem)</label>
+            <input type="text" v-model="slurmAdv.mem" placeholder="32G" />
+          </div>
+          <div class="form-group">
+            <label>QoS (--qos)</label>
+            <Combobox v-model="slurmAdv.qos" :options="slurmData.qos" placeholder="normal" />
+          </div>
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>GPU 綁定 (--gpu-bind)</label>
+            <input type="text" v-model="slurmAdv.gpuBind" placeholder="closest" />
+          </div>
+          <div class="form-group">
+            <label>節點限制 (--constraint)</label>
+            <input type="text" v-model="slurmAdv.constraint" placeholder="a100|nvlink" />
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="exclusive" v-model="slurmAdv.exclusive" />
+            <label for="exclusive">獨占節點 (--exclusive)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="profile" v-model="slurmAdv.profile" />
+            <label for="profile">啟用 Slurm profile (--profile)</label>
+          </div>
+        </div>
+        <small class="muted">此分頁僅生成 sbatch/srun 旗標，請搭配 Slurm 腳本。</small>
+      </div>
+
+      <!-- Slurm array -->
+      <div v-if="mode === 'slurm-array'">
+        <div class="inline">
+          <div class="form-group">
+            <label>陣列範圍 (--array)</label>
+            <input type="text" v-model="slurmArray.range" placeholder="0-99%10" />
+          </div>
+          <div class="form-group">
+            <label>輸出檔命名</label>
+            <input type="text" v-model="slurmArray.outFmt" placeholder="%x.%A.%a.out" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>錯誤檔命名</label>
+          <input type="text" v-model="slurmArray.errFmt" placeholder="%x.%A.%a.err" />
+        </div>
+        <div class="form-group">
+          <label>陣列執行指令 (可用 SLURM_ARRAY_TASK_ID)</label>
+          <input type="text" v-model="slurmArray.run" placeholder="./run.sh ${SLURM_ARRAY_TASK_ID}" />
+        </div>
+        <div class="form-group">
+          <label>腳本檔名</label>
+          <input type="text" v-model="slurmArray.scriptName" placeholder="array.slurm" />
+        </div>
+      </div>
+
+      <!-- Perf -->
+      <div v-if="mode === 'perf'">
+        <div class="inline">
+          <div class="form-group">
+            <label>取樣頻率 (-F)</label>
+            <input type="number" v-model.number="perf.freq" min="1" placeholder="999" />
+          </div>
+          <div class="form-group">
+            <label>呼叫圖 (-g)</label>
+            <select v-model="perf.callGraph">
+              <option value="none">none</option>
+              <option value="dwarf">dwarf</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>輸出檔 (record)</label>
+          <input type="text" v-model="perf.output" placeholder="perf.data" />
+        </div>
+        <div class="form-group">
+          <label>目標執行檔</label>
+          <input type="text" v-model="perf.executable" placeholder="./app" />
+        </div>
+      </div>
+
+      <!-- Valgrind -->
+      <div v-if="mode === 'valgrind'">
+        <div class="inline">
+          <div class="form-group">
+            <label>工具 (--tool)</label>
+            <select v-model="valgrind.tool">
+              <option value="memcheck">memcheck</option>
+              <option value="massif">massif</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Leak 檢查</label>
+            <select v-model="valgrind.leak">
+              <option value="no">no</option>
+              <option value="yes">yes</option>
+              <option value="full">full</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Log 檔樣板</label>
+          <input type="text" v-model="valgrind.logFmt" placeholder="valgrind.%p.log" />
+        </div>
+        <div class="form-group">
+          <label>目標執行檔</label>
+          <input type="text" v-model="valgrind.executable" placeholder="./app" />
+        </div>
+      </div>
+
+      <!-- CUDA-MEMCHECK -->
+      <div v-if="mode === 'cuda-memcheck'">
+        <div class="form-group">
+          <label>工具</label>
+          <select v-model="cudaMem.tool">
+            <option value="memcheck">memcheck</option>
+            <option value="racecheck">racecheck</option>
+            <option value="initcheck">initcheck</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>目標執行檔</label>
+          <input type="text" v-model="cudaMem.executable" placeholder="./cuda_app" />
+        </div>
+      </div>
+
+      <!-- Enhanced Transfer additions in existing transfer tab -->
+      <div v-if="mode === 'transfer'">
+        <div class="inline">
+          <div class="form-group">
+            <label>來源 (local 或 remote:path)</label>
+            <input type="text" v-model="transfer.src" placeholder="./data/" />
+          </div>
+          <div class="form-group">
+            <label>目的地</label>
+            <input type="text" v-model="transfer.dst" placeholder="user@server:/path/" />
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="rsync" v-model="transfer.useRsync" />
+            <label for="rsync">使用 rsync (否則用 scp)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="compress" v-model="transfer.compress" />
+            <label for="compress">壓縮 (-z)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="progress" v-model="transfer.progress" />
+            <label for="progress">進度顯示 (--progress)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="archive" v-model="transfer.archive" />
+            <label for="archive">保留屬性 (-a)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="checksum" v-model="transfer.checksum" />
+            <label for="checksum">檔案校驗 (--checksum)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="delete" v-model="transfer.delete" />
+            <label for="delete">刪除檔案 (--delete)</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Environment Modules -->
+      <div v-if="mode === 'modules'">
+        <div class="form-group">
+          <label>1. 取得 Module 列表</label>
+          <p style="color: #8b949e; font-size: 0.9rem; margin-bottom: 8px;">
+            請在您的 HPC 叢集上執行以下指令，並將輸出結果貼到下方文字框中：
+          </p>
+          <div class="code-block" style="margin-bottom: 12px;">
+            <div class="code-header">
+              <span>終端機指令 (已加入 | cat 避免分頁)</span>
+              <button class="copy-btn" @click="handleCopy('module -t avail 2>&1 | cat', $event)">複製</button>
+            </div>
+            <pre>$ module -t avail 2>&1 | cat</pre>
+          </div>
+          <textarea v-model="modules.availOutput" rows="6" placeholder="貼上 module -t avail 的輸出結果..."></textarea>
+        </div>
+
+        <div class="form-group" v-if="availableModules.length > 0">
+          <label>2. 選擇 Modules ({{ modules.selected.length }} 已選)</label>
+          <input type="text" v-model="modules.filter" placeholder="搜尋 module..." style="margin-bottom: 12px;" />
+
+          <div class="module-list-container">
+            <div v-for="pkg in filteredModules" :key="pkg.name" class="module-group">
+              <div class="pkg-name">{{ pkg.name }}</div>
+              <div class="pkg-versions">
+                <label v-for="ver in pkg.versions" :key="ver" class="version-chip">
+                  <input type="checkbox" :value="ver ? `${pkg.name}/${ver}` : pkg.name" v-model="modules.selected" />
+                  <span class="chip-content">{{ ver || 'default' }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>手動輸入 (Load)</label>
+          <input type="text" v-model="modules.load" placeholder="gcc/12.2 openmpi/4.1.5" />
+          <small class="muted">除了上方勾選的項目外，您也可以在此手動輸入 (以空格分隔)。</small>
+        </div>
+
+        <div class="form-group">
+          <label>手動輸入 (Unload)</label>
+          <input type="text" v-model="modules.unload" placeholder="intel" />
+        </div>
+      </div>
+
+      <!-- Apptainer / Singularity -->
+      <div v-if="mode === 'apptainer'">
+        <div class="form-group">
+          <label>指令 (Command)</label>
+          <select v-model="apptainer.command">
+            <option value="exec">exec (執行指令)</option>
+            <option value="run">run (執行 runscript)</option>
+            <option value="shell">shell (進入互動式 shell)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>映像檔路徑 (Image Path)</label>
+          <input type="text" v-model="apptainer.image" placeholder="image.sif" />
+        </div>
+
+        <div class="form-group">
+          <label>掛載路徑 (--bind / -B)</label>
+          <input type="text" v-model="apptainer.binds" placeholder="/host/path:/container/path, /data" />
+        </div>
+
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="apt-writable" v-model="apptainer.writable" />
+            <label for="apt-writable">可寫入 (--writable)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="apt-nv" v-model="apptainer.nv" />
+            <label for="apt-nv">NVIDIA GPU (--nv)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="apt-rocm" v-model="apptainer.rocm" />
+            <label for="apt-rocm">AMD ROCm (--rocm)</label>
+          </div>
+        </div>
+
+        <div class="form-group" v-if="apptainer.command === 'exec'">
+          <label>執行指令</label>
+          <input type="text" v-model="apptainer.executable" placeholder="./app" />
+        </div>
+
+        <div class="form-group">
+          <label>其他選項</label>
+          <input type="text" v-model="apptainer.options" placeholder="--cleanenv" />
+        </div>
+      </div>
+
+      <!-- Apptainer Builder -->
+      <div v-if="mode === 'apptainer-builder'" style="height: calc(100vh - 150px);">
+        <ApptainerBuilder />
+      </div>
+
+      <div class="result-box" v-if="mode === 'slurm'">
+        <div class="code-block">
+          <div class="code-header">
+            <span>產生腳本 (Write Script)</span>
+            <button class="copy-btn" @click="handleCopy(generateWriteSlurmCmd, $event)">複製</button>
+          </div>
+          <pre>{{ generateWriteSlurmCmd }}</pre>
+        </div>
+
+        <div class="code-block" style="margin-top: 16px;">
+          <div class="code-header">
+            <span>提交作業 (Submit Job)</span>
+            <button class="copy-btn" @click="handleCopy(`sbatch ${slurm.scriptName}`, $event)">複製</button>
+          </div>
+          <pre>$ sbatch {{ slurm.scriptName }}</pre>
+        </div>
+
+        <div class="btn-row" style="position: static; margin-top: 16px;">
+          <button class="copy-btn" @click="downloadSlurm">下載腳本檔案</button>
+        </div>
+      </div>
+
+      <div class="result-box" v-else-if="mode !== 'apptainer-builder'">
+        <div class="btn-row">
+          <button class="copy-btn" @click="copyToClipboard">複製</button>
+          <button v-if="mode === 'apptainer'" class="copy-btn" @click="sendApptainerToMpi">傳送到 MPI Runner</button>
+          <button v-if="mode === 'apptainer'" class="copy-btn" @click="sendApptainerToSlurm">傳送到 Slurm</button>
+          <button v-if="mode === 'mpi'" class="copy-btn" @click="sendMpiToSlurm">傳送到 Slurm</button>
+        </div>
+        $ {{ generatedCommand }}
+      </div>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+/* Root layout */
+:global(body) {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0d0e10;
+  color: #e6e9ef;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background: #15171b;
+  border-right: 1px solid #23262d;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s ease, padding 0.2s ease;
+  z-index: 10;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+  padding: 16px 8px;
+}
+
+.sidebar:not(.collapsed) {
+  width: 260px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  height: 32px;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  background: transparent;
+  color: #8b949e;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  background: #21262d;
+  color: #fff;
+}
+
+.sidebar-search {
+  margin-bottom: 16px;
+}
+
+.sidebar-search input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: #0d1117;
+  color: #e6e9ef;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.sidebar-search input:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-nav li {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #8b949e;
+  transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-nav li:hover {
+  background: #21262d;
+  color: #c9d1d9;
+}
+
+.sidebar-nav li.active {
+  background: #1f6feb;
+  color: #fff;
+}
+
+.item-label {
+  font-size: 0.95rem;
+}
+
+.item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #30363d;
+  margin: 0 auto;
+}
+
+.sidebar-nav li.active .item-dot {
+  background: #fff;
+}
+
+/* Main Content */
+.content {
+  padding: 24px 32px;
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.page-title h1 {
+  margin: 0 0 24px;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Info banner */
+.info-banner {
+  background: #1f6feb22;
+  border: 1px solid #1f6feb;
+  color: #58a6ff;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #c9d1d9;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+input[type='text'],
+input[type='number'],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6e9ef;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+/* Checkboxes */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.checkbox-group > div,
+.checkbox-group > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #c9d1d9;
+}
+
+input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #1f6feb;
+  cursor: pointer;
+}
+
+/* Helper text */
+small.muted {
+  display: block;
+  margin-top: 6px;
+  color: #8b949e;
+  font-size: 0.85rem;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #30363d;
+  margin: 24px 0;
+}
+
+/* Result Box */
+.result-box {
+  margin-top: 32px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 16px;
+  position: relative;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #7ee787;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.code-block {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 0.85rem;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  color: #7ee787;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.btn-row {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.copy-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover {
+  background: #30363d;
+  border-color: #8b949e;
+  color: #fff;
+}
+
+.module-list-container {
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid #30363d;
+  background: #0d1117;
+  border-radius: 8px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+
+.module-group {
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.module-group:last-child {
+  /* Reset legacy styles */
+  border-bottom: 1px solid #21262d;
+  margin-bottom: 0;
+  padding-bottom: 12px;
+}
+
+.pkg-name {
+  font-weight: 600;
+  color: #58a6ff;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.pkg-versions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.version-chip {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  user-select: none;
+  position: relative;
+}
+
+.version-chip input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.chip-content {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  padding: 4px 10px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.version-chip:hover .chip-content {
+  background: #30363d;
+  border-color: #8b949e;
+}
+
+.version-chip input:checked ~ .chip-content {
+  background: #1f6feb;
+  border-color: #1f6feb;
+  color: #ffffff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-columns: 64px 1fr;
+  }
+
+  .sidebar {
+    width: 64px;
+    padding: 16px 8px;
+  }
+
+  .sidebar:not(.collapsed) {
+    width: 64px;
+  }
+
+  .sidebar-header .brand,
+  .sidebar-search,
+  .item-label {
+    display: none;
+  }
+
+  .toggle-btn {
+    display: none;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .inline {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
