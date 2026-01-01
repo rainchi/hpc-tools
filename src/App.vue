@@ -340,7 +340,7 @@ const modes = [
   { key: 'nvprof', label: 'NVIDIA Profiler (nvprof)' },
   { key: 'nsys', label: 'Nsight Systems (nsys)' },
   { key: 'ncu', label: 'Nsight Compute (ncu)' },
-  { key: 'slurm', label: 'Slurm sbatch' },
+  { key: 'slurm', label: 'Slurm 腳本產生器' },
   { key: 'slurm-array', label: 'Slurm 陣列' },
   { key: 'perf', label: 'CPU Profiling (perf)' },
   { key: 'valgrind', label: 'Valgrind' },
