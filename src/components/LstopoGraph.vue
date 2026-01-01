@@ -5,6 +5,10 @@ const props = defineProps({
   node: {
     type: Object,
     required: true
+  },
+  forceVisible: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -17,21 +21,35 @@ const interestingKeys = ['DMI', 'Product', 'Model', 'Vendor', 'Board', 'Serial',
 
 const showDetails = ref(false);
 
+const isExpandable = computed(() => {
+  const type = props.node.type ? props.node.type.toLowerCase() : '';
+  return type === 'core' || type === 'numanode' || type === 'package' || type === 'machine' || isMemoryModule.value;
+});
+
 const isMemoryModule = computed(() => {
   return props.node.subtype === 'MemoryModule' || props.node.attr?.subtype === 'MemoryModule';
 });
 
 const toggleDetails = () => {
-  if (isMemoryModule.value) {
+  if (isExpandable.value) {
     showDetails.value = !showDetails.value;
   }
+};
+
+const copyToClipboard = (text) => {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    // Optional: show a temporary "Copied!" state
+  });
 };
 
 const isVisibleNode = computed(() => {
   const type = props.node.type;
   if (!type) return true;
-  // Hide L1/L2 caches to reduce clutter
-  if (type.match(/L1|L2/i)) return false;
+  
+  // Hide L1/L2 caches by default to reduce clutter, unless forced or showing details
+  if (type.match(/L1|L2/i) && !props.forceVisible && !showDetails.value) return false;
+  
   // Hide Bridges to flatten the tree (but keep children via pass-through)
   if (type === 'Bridge') return false;
 
@@ -112,6 +130,40 @@ const isNic = computed(() => {
 const isInfoNode = computed(() => {
   const type = props.node.type ? props.node.type.toLowerCase() : '';
   return type === 'info' || type === 'misc';
+});
+
+const bindingSuggestion = computed(() => {
+  const type = props.node.type ? props.node.type.toLowerCase() : '';
+  const idx = props.node.attr?.os_index;
+  if (idx === undefined) return null;
+
+  if (type === 'core') {
+    return `taskset -c ${idx}`;
+  }
+  if (type === 'numanode') {
+    return `numactl --cpunodebind=${idx} --membind=${idx}`;
+  }
+  return null;
+});
+
+const cacheInfo = computed(() => {
+  const type = props.node.type ? props.node.type.toLowerCase() : '';
+  if (!type.includes('cache')) return null;
+  
+  const size = props.node.attr?.size;
+  const lineSize = props.node.attr?.linesize;
+  const ways = props.node.attr?.ways;
+  
+  let parts = [];
+  if (size) {
+    const kb = parseInt(size) / 1024;
+    if (kb >= 1024) parts.push(`${(kb/1024).toFixed(0)}MB`);
+    else parts.push(`${kb.toFixed(0)}KB`);
+  }
+  if (ways && ways !== '-1') parts.push(`${ways}-way`);
+  if (lineSize) parts.push(`L:${lineSize}B`);
+  
+  return parts.join(' ');
 });
 
 const processedChildren = computed(() => {
@@ -206,7 +258,7 @@ const processedChildren = computed(() => {
     :class="[
       node.type ? node.type.toLowerCase() : 'unknown',
       node.subtype ? node.subtype.toLowerCase() : '',
-      { 'is-gpu': isGpu, 'is-nic': isNic, 'is-info': isInfoNode, 'is-clickable': isMemoryModule }
+      { 'is-gpu': isGpu, 'is-nic': isNic, 'is-info': isInfoNode, 'is-clickable': isExpandable, 'is-expanded': showDetails }
     ]"
     @click.stop="toggleDetails"
   >
@@ -222,6 +274,9 @@ const processedChildren = computed(() => {
       <!-- Name (GPU/NIC model or Info Value) -->
       <span v-if="deviceName" class="obj-name" :title="deviceName">{{ deviceName }}</span>
 
+      <!-- Cache Info -->
+      <span v-if="cacheInfo" class="obj-cache">{{ cacheInfo }}</span>
+
       <!-- Memory Size -->
       <span v-if="node.attr.local_memory" class="obj-mem">
         {{ (parseInt(node.attr.local_memory) / 1024 / 1024 / 1024).toFixed(0) }}GB
@@ -230,18 +285,24 @@ const processedChildren = computed(() => {
       <!-- Interconnect Info (Link Speed/Width) -->
       <span v-if="pciInfo" class="obj-link">{{ pciInfo }}</span>
 
-      <!-- Expand indicator for Memory -->
-      <span v-if="isMemoryModule" class="obj-expand-icon">{{ showDetails ? '−' : '+' }}</span>
+      <!-- Expand indicator -->
+      <span v-if="isExpandable" class="obj-expand-icon">{{ showDetails ? '−' : '+' }}</span>
+    </div>
+
+    <!-- Binding Suggestion Overlay -->
+    <div v-if="showDetails && bindingSuggestion" class="obj-suggestion" @click.stop>
+      <code>{{ bindingSuggestion }}</code>
+      <button class="mini-copy" @click="copyToClipboard(bindingSuggestion)">複製</button>
     </div>
 
     <div class="obj-children" v-if="processedChildren.length && (!isMemoryModule || showDetails)">
-      <LstopoGraph v-for="(child, i) in processedChildren" :key="i" :node="child" />
+      <LstopoGraph v-for="(child, i) in processedChildren" :key="i" :node="child" :forceVisible="showDetails" />
     </div>
   </div>
 
   <!-- Case 2: Hidden Node (Pass-through children) -->
   <template v-else>
-    <LstopoGraph v-for="(child, i) in processedChildren" :key="i" :node="child" />
+    <LstopoGraph v-for="(child, i) in processedChildren" :key="i" :node="child" :forceVisible="forceVisible" />
   </template>
 </template>
 
@@ -293,6 +354,7 @@ const processedChildren = computed(() => {
 .obj-busid { color: #8b949e; font-family: monospace; font-size: 0.65rem; }
 .obj-name { color: #79c0ff; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
 .obj-mem { color: #d29922; font-weight: bold; }
+.obj-cache { color: #7ee787; font-family: monospace; font-size: 0.65rem; }
 .obj-link {
   background: #1f6feb;
   color: white;
@@ -300,6 +362,60 @@ const processedChildren = computed(() => {
   border-radius: 3px;
   font-size: 0.6rem;
   font-family: monospace;
+}
+
+.obj-expand-icon {
+  margin-left: 4px;
+  font-weight: bold;
+  color: #58a6ff;
+}
+
+.is-clickable {
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.is-clickable:hover {
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.05);
+}
+
+.is-expanded {
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.03);
+}
+
+.obj-suggestion {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: 4px 0;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #7ee787;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.obj-suggestion code {
+  font-family: monospace;
+}
+
+.mini-copy {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 0.6rem;
+  cursor: pointer;
+}
+
+.mini-copy:hover {
+  background: #30363d;
+  color: #fff;
 }
 
 .obj-children {

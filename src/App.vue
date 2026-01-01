@@ -200,6 +200,8 @@ const slurmData = reactive({
   fetched: false
 });
 
+const cpuTopologyRaw = ref('');
+
 watch(() => sysinfo.rawOutput, (newVal) => {
   if (!newVal) return;
   let text = newVal.trim();
@@ -207,6 +209,13 @@ watch(() => sysinfo.rawOutput, (newVal) => {
     try {
       text = atob(text.replace(/\s/g, ''));
     } catch (e) { }
+  }
+
+  if (text.includes('---SECTION:CPU_TOPOLOGY---')) {
+    const cpuMatch = text.match(/---SECTION:CPU_TOPOLOGY---([\s\S]*?)(---SECTION|$)/);
+    if (cpuMatch) {
+      cpuTopologyRaw.value = cpuMatch[1].trim();
+    }
   }
 
   if (text.includes('---SECTION:SLURM_PARTITIONS---')) {
@@ -753,7 +762,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <small class="muted">提示：OpenMPI 用 --bind-to；Intel MPI 可用 -genv；MPICH 用 -env</small>
 
         <hr />
-        <CpuBinding v-model="rankfileTextVal" :mpiType="mpi.type" :hostfile="mpi.hostfile" />
+        <CpuBinding v-model="rankfileTextVal" :mpiType="mpi.type" :hostfile="mpi.hostfile" :externalTopology="cpuTopologyRaw" :defaultRanks="mpi.np" />
         <div v-if="rankfileTextVal" class="result-box">
           <div class="btn-row">
             <button class="copy-btn" @click="navigator.clipboard.writeText(rankfileTextVal); alert('rankfile 已複製！');">複製 rankfile</button>

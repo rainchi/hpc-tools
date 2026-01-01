@@ -5,15 +5,21 @@ const props = defineProps({
   mpiType: { type: String, default: 'openmpi' },
   hostfile: { type: String, default: '' },
   modelValue: { type: String, default: '' }, // rankfileText v-model
+  externalTopology: { type: String, default: '' },
+  defaultRanks: { type: Number, default: 4 }
 });
 const emit = defineEmits(['update:modelValue']);
 
 const binding = reactive({
   raw: '',
   policy: 'sequential',
-  ranks: 4,
+  ranks: props.defaultRanks,
   viewMode: 'socket', // socket, node, flat
   parsedItems: []
+});
+
+watch(() => props.defaultRanks, (newVal) => {
+  binding.ranks = newVal;
 });
 
 const selectedCpus = ref([]); // For auto policies
@@ -28,18 +34,29 @@ const parseCpuInfo = () => {
   const lines = (binding.raw || '').trim().split(/\r?\n/).filter((l) => l.trim().length);
   if (!lines.length) { binding.parsedItems = []; selectedCpus.value = []; return; }
 
-  const header = lines[0].toLowerCase();
+  const headerLine = lines[0].toUpperCase();
+  const cols_header = headerLine.split(/\s+/);
+  
+  // Find indices of required columns
+  const idxCpu = cols_header.indexOf('CPU');
+  const idxCore = cols_header.indexOf('CORE');
+  const idxSocket = cols_header.indexOf('SOCKET');
+  let idxNode = cols_header.indexOf('NODE');
+  if (idxNode === -1) idxNode = cols_header.indexOf('DRAWER'); // Some systems use DRAWER or BOOK
+
   let dataLines = lines;
-  if (header.includes('cpu') && header.includes('core')) dataLines = lines.slice(1);
+  if (idxCpu !== -1) dataLines = lines.slice(1);
 
   const items = [];
   for (const line of dataLines) {
     const cols = line.trim().split(/\s+/);
-    if (cols.length < 4) continue;
-    const cpu = parseInt(cols[0], 10);
-    const core = parseInt(cols[1], 10);
-    const socket = parseInt(cols[2], 10);
-    const node = parseInt(cols[3], 10);
+    if (cols.length < 3) continue;
+    
+    const cpu = idxCpu !== -1 ? parseInt(cols[idxCpu], 10) : parseInt(cols[0], 10);
+    const core = idxCore !== -1 ? parseInt(cols[idxCore], 10) : parseInt(cols[1], 10);
+    const socket = idxSocket !== -1 ? parseInt(cols[idxSocket], 10) : parseInt(cols[2], 10);
+    const node = idxNode !== -1 ? parseInt(cols[idxNode], 10) : (idxSocket !== -1 ? parseInt(cols[idxSocket], 10) : 0);
+    
     if (Number.isNaN(cpu)) continue;
     items.push({ cpu, core, socket, node });
   }
@@ -207,6 +224,13 @@ const rankfileText = computed(() => {
 });
 
 watch(rankfileText, (v) => emit('update:modelValue', v));
+
+watch(() => props.externalTopology, (newVal) => {
+  if (newVal && !binding.raw) {
+    binding.raw = newVal;
+    parseCpuInfo();
+  }
+}, { immediate: true });
 
 // Manual Drag & Drop Logic
 const onDragStartRank = (ev, rank) => {
