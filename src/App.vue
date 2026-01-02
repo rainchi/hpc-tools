@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue';
-import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
+import { decompressFromEncodedURIComponent } from 'lz-string';
 import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd } from './utils/builders';
 import { HPL_PARAMETERS } from './utils/hpl';
 import CpuBinding from './components/CpuBinding.vue';
@@ -766,7 +766,7 @@ const deleteServer = () => {
   });
 };
 
-const shareState = () => {
+const exportConfig = () => {
   const data = {
     mode: mode.value,
     state: {}
@@ -774,20 +774,43 @@ const shareState = () => {
   for (const key in serverState) {
     data.state[key] = JSON.parse(JSON.stringify(serverState[key]));
   }
-  try {
-    const json = JSON.stringify(data);
-    // Compress and encode to a URL-safe string to produce much shorter share links
-    const encoded = compressToEncodedURIComponent(json);
-    const url = new URL(window.location.href);
-    url.hash = `share=${encoded}`;
-    
-    navigator.clipboard.writeText(url.toString()).then(() => {
-      showToast('分享連結已複製到剪貼簿！');
-    });
-  } catch (e) {
-    showToast('分享失敗：設定內容過大或包含不支援的字元。', 'error');
-    console.error(e);
-  }
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hpc-tools-config.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('設定檔已匯出！');
+};
+
+const fileInput = ref(null);
+
+const triggerImport = () => {
+  fileInput.value.click();
+};
+
+const handleFileImport = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const json = e.target.result;
+      const data = JSON.parse(json);
+      if (data.mode) mode.value = data.mode;
+      if (data.state) applyState(data.state);
+      showToast('設定檔已匯入！');
+    } catch (err) {
+      console.error(err);
+      showToast('匯入失敗：檔案格式錯誤', 'error');
+    }
+    // Reset input so same file can be selected again
+    event.target.value = '';
+  };
+  reader.readAsText(file);
 };
 
 // Initialize
@@ -904,7 +927,17 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
             </select>
             <button class="icon-btn" @click="addServer" title="新增伺服器">+</button>
           </div>
-          <button class="share-btn" @click="shareState">📤 分享當前設定連結</button>
+          <div class="config-actions">
+            <button class="share-btn" @click="exportConfig">📤 匯出設定 (JSON)</button>
+            <button class="share-btn" @click="triggerImport">📥 匯入設定 (JSON)</button>
+            <input 
+              type="file" 
+              ref="fileInput" 
+              style="display: none" 
+              accept=".json" 
+              @change="handleFileImport" 
+            />
+          </div>
           <div class="server-actions" v-if="currentServerId !== 'default'">
             <button @click="renameServer">重新命名</button>
             <button @click="deleteServer" class="danger">刪除</button>
@@ -2113,6 +2146,17 @@ hr {
   background: #1f6feb44;
   border-color: #58a6ff;
   color: #fff;
+}
+
+.config-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.config-actions .share-btn {
+  margin-bottom: 0;
+  flex: 1;
 }
 
 .icon-btn {
