@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue';
 import { decompressFromEncodedURIComponent } from 'lz-string';
-import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd } from './utils/builders';
+import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildSrunCmd, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd } from './utils/builders';
 import { HPL_PARAMETERS } from './utils/hpl';
 import CpuBinding from './components/CpuBinding.vue';
 import SystemInfoViewer from './components/SystemInfoViewer.vue';
@@ -310,6 +310,7 @@ const onSysInfoPaste = (event) => {
 };
 
 const showSlurmPreview = ref(false);
+const showSrunPreview = ref(false);
 
 // Sidebar state and search
 const sidebarCollapsed = ref(false);
@@ -1349,12 +1350,29 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
             <input type="checkbox" id="show-slurm-preview" v-model="showSlurmPreview" />
             <label for="show-slurm-preview">預覽腳本內容 (Preview Script)</label>
           </div>
+          <div>
+            <input type="checkbox" id="show-srun-preview" v-model="showSrunPreview" />
+            <label for="show-srun-preview">顯示測試指令 (Show Test Commands)</label>
+          </div>
         </div>
         <div v-if="showSlurmPreview" class="result-box">
           <div class="btn-row">
             <button class="copy-btn" @click="copySlurmPreview($event)">複製內容</button>
           </div>
           <pre>{{ buildSlurmScript(slurm, slurmAdv) }}</pre>
+        </div>
+        <div v-if="showSrunPreview" class="result-box">
+          <div class="section-title" style="margin-top: 0;">互動式測試 (Interactive)</div>
+          <div class="btn-row">
+            <button class="copy-btn" @click="handleCopy(buildSrunCmd(slurm, slurmAdv).interactive, $event)">複製</button>
+          </div>
+          <pre>{{ buildSrunCmd(slurm, slurmAdv).interactive }}</pre>
+          
+          <div class="section-title">直接執行 (Run Command)</div>
+          <div class="btn-row">
+            <button class="copy-btn" @click="handleCopy(buildSrunCmd(slurm, slurmAdv).runCmd, $event)">複製</button>
+          </div>
+          <pre>{{ buildSrunCmd(slurm, slurmAdv).runCmd }}</pre>
         </div>
       </div>
 

@@ -103,6 +103,26 @@ export const buildSlurmScript = (slurm, slurmAdv) => {
   return lines.join('\n');
 };
 
+export const buildSrunCmd = (slurm, slurmAdv) => {
+  let cmd = 'srun';
+  if (slurm.partition) cmd += ` --partition=${slurm.partition}`;
+  if (slurm.account) cmd += ` --account=${slurm.account}`;
+  if (slurm.time) cmd += ` --time=${slurm.time}`;
+  if (slurm.nodes) cmd += ` --nodes=${slurm.nodes}`;
+  if (slurm.ntasksPerNode) cmd += ` --ntasks-per-node=${slurm.ntasksPerNode}`;
+  if (slurm.gpusPerNode && slurm.gpusPerNode > 0) cmd += ` --gpus-per-node=${slurm.gpusPerNode}`;
+  if (slurmAdv.mem) cmd += ` --mem=${slurmAdv.mem}`;
+  if (slurmAdv.qos) cmd += ` --qos=${slurmAdv.qos}`;
+  if (slurmAdv.gpuBind) cmd += ` --gpu-bind=${slurmAdv.gpuBind}`;
+  if (slurmAdv.constraint) cmd += ` --constraint=${slurmAdv.constraint}`;
+  if (slurmAdv.exclusive) cmd += ` --exclusive`;
+  
+  const interactive = `${cmd} --pty /bin/bash`;
+  const runCmd = `${cmd} ${slurm.run}`;
+  
+  return { interactive, runCmd };
+};
+
 export const buildArrayScript = (slurmArray) => {
   const lines = [];
   lines.push('#!/bin/bash');
