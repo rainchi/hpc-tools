@@ -2,9 +2,11 @@
 import { reactive, computed, ref, watch } from 'vue';
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
 import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd } from './utils/builders';
+import { HPL_PARAMETERS } from './utils/hpl';
 import CpuBinding from './components/CpuBinding.vue';
 import SystemInfoViewer from './components/SystemInfoViewer.vue';
 import ApptainerBuilder from './components/ApptainerBuilder.vue';
+import HplConfigBuilder from './components/HplConfigBuilder.vue';
 import Combobox from './components/Combobox.vue';
 
 // State
@@ -95,6 +97,19 @@ const slurmArray = reactive({
   errFmt: '%x.%A.%a.err',
   run: './run.sh ${SLURM_ARRAY_TASK_ID}',
   scriptName: 'array.slurm',
+});
+
+const hpl = reactive({});
+// Initialize HPL config with defaults
+HPL_PARAMETERS.forEach(p => {
+  hpl[p.key] = Array.isArray(p.default) ? [...p.default] : p.default;
+});
+
+const hplMem = reactive({
+  memoryGB: 16,
+  usageRatio: 0.8,
+  memoryType: 'cpu',
+  gpuCount: 1
 });
 
 const transfer = reactive({
@@ -366,6 +381,7 @@ const modes = [
   { key: 'transfer', label: 'Rsync / SCP' },
   { key: 'apptainer', label: 'Apptainer / Singularity' },
   { key: 'apptainer-builder', label: 'Apptainer Builder' },
+  { key: 'hpl', label: 'HPL Config Builder' },
   { key: 'modules', label: 'Environment Modules' },
 ];
 
@@ -660,7 +676,7 @@ const currentServerId = ref('default');
 let isLoading = false;
 
 const serverState = {
-  mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer
+  mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem
 };
 
 const saveCurrentServerData = () => {
@@ -821,7 +837,7 @@ if (hash.startsWith('#share=')) {
   }
 }
 
-watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer], () => {
+watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem], () => {
   saveCurrentServerData();
 }, { deep: true });
 </script>
@@ -1558,6 +1574,11 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <ApptainerBuilder />
       </div>
 
+      <!-- HPL Config Builder -->
+      <div v-if="mode === 'hpl'">
+        <HplConfigBuilder :config="hpl" :mem-settings="hplMem" />
+      </div>
+
       <div class="result-box" v-if="mode === 'slurm'">
         <div class="code-block">
           <div class="code-header">
@@ -1580,7 +1601,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         </div>
       </div>
 
-      <div class="result-box" v-else-if="mode !== 'apptainer-builder'">
+      <div class="result-box" v-else-if="mode !== 'apptainer-builder' && mode !== 'hpl'">
         <div class="btn-row">
           <button class="copy-btn" @click="copyToClipboard">複製</button>
           
