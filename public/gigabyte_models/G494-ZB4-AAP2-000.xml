@@ -1,0 +1,1035 @@
+<AST2600 version="1756478868" model="G494-ZB4-AAP2-000">
+	<I2C chnl="1">
+		<PCA9545 addr="0xE6" __link__="12" />
+		<PCA9545 addr="0xEA" __link__="12" />
+		<PCA9545_PARALLEL __taker__="12">
+			<PCA9545_BUS chnl="1">
+				<PCA9545 addr="0xE0" __link__="13" />
+				<PCA9545 addr="0xEC" __link__="13" />
+				<PCA9545_PARALLEL __taker__="13">
+					<PCA9545_BUS chnl="0">
+						<GPU_TEMP slot="1">
+							<SENSOR no="0x18" sdr="GPU_TEMP" name="SLOT1_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="1">
+						<GPU_TEMP slot="2">
+							<SENSOR no="0x19" sdr="GPU_TEMP" name="SLOT2_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="3">
+						<PEX89104_TEMP addr="0xB8">
+							<SENSOR no="0xBC" sdr="MB_TEMP_MZ5" name="HIC_TEMP_0" scan="ON,1" />
+						</PEX89104_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="4">
+						<GPU_TEMP slot="3">
+							<SENSOR no="0x1A" sdr="GPU_TEMP" name="SLOT3_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="5">
+						<GPU_TEMP slot="4">
+							<SENSOR no="0x1B" sdr="GPU_TEMP" name="SLOT4_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="12">
+						<OCPCARD_TEMP>
+							<SENSOR no="0x20" sdr="OCP_TEMP" name="SLOT11_TEMP" scan="ON,1" />
+						</OCPCARD_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="13">
+						<OCPCARD_TEMP>
+							<SENSOR no="0x21" sdr="OCP_TEMP" name="SLOT9_TEMP" scan="ON,1" />
+						</OCPCARD_TEMP>
+					</PCA9545_BUS>
+				</PCA9545_PARALLEL>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="3">
+				<OCPCARD_TEMP>
+					<SENSOR no="0x2A" sdr="OCP_TEMP" name="SLOT10_TEMP" scan="ON,1" />
+				</OCPCARD_TEMP>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="6">
+				<PCA9545 addr="0xE0" __link__="18" />
+				<PCA9545 addr="0xEC" __link__="18" />
+				<PCA9545_PARALLEL __taker__="18">
+					<PCA9545_BUS chnl="0">
+						<GPU_TEMP slot="5">
+							<SENSOR no="0x1C" sdr="GPU_TEMP" name="SLOT5_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="1">
+						<GPU_TEMP slot="6">
+							<SENSOR no="0x1D" sdr="GPU_TEMP" name="SLOT6_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="3">
+						<PEX89104_TEMP addr="0xB8">
+							<SENSOR no="0xBD" sdr="MB_TEMP_MZ5" name="HIC_TEMP_1" scan="ON,1" />
+						</PEX89104_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="4">
+						<GPU_TEMP slot="7">
+							<SENSOR no="0x1E" sdr="GPU_TEMP" name="SLOT7_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="5">
+						<GPU_TEMP slot="8">
+							<SENSOR no="0x1F" sdr="GPU_TEMP" name="SLOT8_GPU_TEMP" scan="ON,1" />
+						</GPU_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="14">
+						<OCPCARD_TEMP>
+							<SENSOR no="0x22" sdr="OCP_TEMP" name="SLOT12_TEMP" scan="ON,1" />
+						</OCPCARD_TEMP>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="15">
+						<OCPCARD_TEMP>
+							<SENSOR no="0x23" sdr="OCP_TEMP" name="SLOT13_TEMP" scan="ON,1" />
+						</OCPCARD_TEMP>
+					</PCA9545_BUS>
+				</PCA9545_PARALLEL>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="8">
+				<OCPCARD_TEMP>
+					<SENSOR no="0x2B" sdr="OCP_TEMP" name="SLOT14_TEMP" scan="ON,1" />
+				</OCPCARD_TEMP>
+			</PCA9545_BUS>
+		</PCA9545_PARALLEL>
+	</I2C>
+	<I2C chnl="2">
+		<IMX3112 addr="0xE0">
+			<IMX3112_BUS chnl="0">
+				<APML_CPU addr="0x98">
+					<SENSOR no="0x01" sdr="AMD_CPU_TEMP" name="CPU0_TEMP" scan="ON,3" />
+				</APML_CPU>
+				<I2C_DEVICE addr="0x78">
+					<APML_CPU_CAPPING>
+						<ACCESS_PT no="0x180" sdr="APML_CAPPING" />
+					</APML_CPU_CAPPING>
+					<APML_CPU_PWR>
+						<ACCESS_PT no="0x182" sdr="APML_PWR" />
+					</APML_CPU_PWR>
+					<APML_READ_CPU_CTDP>
+						<ACCESS_PT no="0x186" sdr="APML_CTDP" />
+					</APML_READ_CPU_CTDP>
+					<APML_CPU_INFO>
+						<SENSOR no="0x100" sdr="CPU_INFO" scan="ON,1" />
+					</APML_CPU_INFO>
+					<APML_DIMM addr="0x03" __link__="1" />
+					<APML_DIMM addr="0x13" __link__="1" />
+					<APML_DIMM addr="0x04" __link__="1" />
+					<APML_DIMM addr="0x14" __link__="1" />
+					<APML_DIMM addr="0x00" __link__="1" />
+					<APML_DIMM addr="0x10" __link__="1" />
+					<APML_DIMM addr="0x05" __link__="2" />
+					<APML_DIMM addr="0x15" __link__="2" />
+					<APML_DIMM addr="0x01" __link__="2" />
+					<APML_DIMM addr="0x11" __link__="2" />
+					<APML_DIMM addr="0x02" __link__="2" />
+					<APML_DIMM addr="0x12" __link__="2" />
+					<APML_DIMM addr="0x09" __link__="3" />
+					<APML_DIMM addr="0x19" __link__="3" />
+					<APML_DIMM addr="0x0a" __link__="3" />
+					<APML_DIMM addr="0x1a" __link__="3" />
+					<APML_DIMM addr="0x06" __link__="3" />
+					<APML_DIMM addr="0x16" __link__="3" />
+					<APML_DIMM addr="0x0b" __link__="4" />
+					<APML_DIMM addr="0x1b" __link__="4" />
+					<APML_DIMM addr="0x07" __link__="4" />
+					<APML_DIMM addr="0x17" __link__="4" />
+					<APML_DIMM addr="0x08" __link__="4" />
+					<APML_DIMM addr="0x18" __link__="4" />
+					<MAX __taker__="1">
+						<SENSOR no="0x04" sdr="DIMM_TEMP_DDR5" name="DIMMG0_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="2">
+						<SENSOR no="0x05" sdr="DIMM_TEMP_DDR5" name="DIMMG1_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="3">
+						<SENSOR no="0x06" sdr="DIMM_TEMP_DDR5" name="DIMMG2_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="4">
+						<SENSOR no="0x07" sdr="DIMM_TEMP_DDR5" name="DIMMG3_TEMP" scan="ON,3" />
+					</MAX>
+				</I2C_DEVICE>
+			</IMX3112_BUS>
+			<IMX3112_BUS chnl="1">
+				<APML_CPU addr="0x90" __link__="6" />
+				<I2C_DEVICE addr="0x70">
+					<APML_CPU_CAPPING>
+						<ACCESS_PT no="0x184" sdr="APML_CAPPING" />
+					</APML_CPU_CAPPING>
+					<APML_CPU_PWR>
+						<ACCESS_PT no="0x185" sdr="APML_PWR" />
+					</APML_CPU_PWR>
+					<APML_READ_CPU_CTDP>
+						<ACCESS_PT no="0x187" sdr="APML_CTDP" />
+					</APML_READ_CPU_CTDP>
+					<APML_CPU_INFO>
+						<SENSOR no="0x102" sdr="CPU_INFO" scan="ON,1" />
+					</APML_CPU_INFO>
+					<APML_DIMM addr="0x03" __link__="14" />
+					<APML_DIMM addr="0x13" __link__="14" />
+					<APML_DIMM addr="0x04" __link__="14" />
+					<APML_DIMM addr="0x14" __link__="14" />
+					<APML_DIMM addr="0x00" __link__="14" />
+					<APML_DIMM addr="0x10" __link__="14" />
+					<APML_DIMM addr="0x05" __link__="15" />
+					<APML_DIMM addr="0x15" __link__="15" />
+					<APML_DIMM addr="0x01" __link__="15" />
+					<APML_DIMM addr="0x11" __link__="15" />
+					<APML_DIMM addr="0x02" __link__="15" />
+					<APML_DIMM addr="0x12" __link__="15" />
+					<APML_DIMM addr="0x09" __link__="16" />
+					<APML_DIMM addr="0x19" __link__="16" />
+					<APML_DIMM addr="0x0a" __link__="16" />
+					<APML_DIMM addr="0x1a" __link__="16" />
+					<APML_DIMM addr="0x06" __link__="16" />
+					<APML_DIMM addr="0x16" __link__="16" />
+					<APML_DIMM addr="0x0b" __link__="17" />
+					<APML_DIMM addr="0x1b" __link__="17" />
+					<APML_DIMM addr="0x07" __link__="17" />
+					<APML_DIMM addr="0x17" __link__="17" />
+					<APML_DIMM addr="0x08" __link__="17" />
+					<APML_DIMM addr="0x18" __link__="17" />
+					<MAX __taker__="14">
+						<SENSOR no="0x14" sdr="DIMM_TEMP_DDR5" name="DIMMG4_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="15">
+						<SENSOR no="0x15" sdr="DIMM_TEMP_DDR5" name="DIMMG5_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="16">
+						<SENSOR no="0x16" sdr="DIMM_TEMP_DDR5" name="DIMMG6_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="17">
+						<SENSOR no="0x17" sdr="DIMM_TEMP_DDR5" name="DIMMG7_TEMP" scan="ON,3" />
+					</MAX>
+				</I2C_DEVICE>
+			</IMX3112_BUS>
+		</IMX3112>
+	</I2C>
+	<I2C chnl="12">
+		<IMX3112 addr="0xE0">
+			<IMX3112_BUS chnl="0">
+				<APML_CPU addr="0x90" __link__="6" />
+				<I2C_DEVICE addr="0x70">
+					<APML_CPU_CAPPING>
+						<ACCESS_PT no="0x181" sdr="APML_CAPPING" />
+					</APML_CPU_CAPPING>
+					<APML_CPU_PWR>
+						<ACCESS_PT no="0x183" sdr="APML_PWR" />
+					</APML_CPU_PWR>
+					<APML_CPU_INFO>
+						<SENSOR no="0x101" sdr="CPU_INFO" scan="ON,1" />
+					</APML_CPU_INFO>
+				</I2C_DEVICE>
+			</IMX3112_BUS>
+		</IMX3112>
+	</I2C>
+	<MAX __taker__="6">
+		<SENSOR no="0x02" sdr="AMD_CPU_TEMP" name="CPU1_TEMP" scan="ON,3" />
+	</MAX>
+	<I2C chnl="7">
+		<RECOVERY_STS addr="0x24">
+			<SENSOR no="0x1BA" sdr="RECOVERY_STS" scan="ANY,1" />
+		</RECOVERY_STS>
+		<CEC_PIN_STS addr="0x24">
+			<SENSOR no="0x1BB" sdr="CEC_PIN_STS" scan="ANY,1" />
+		</CEC_PIN_STS>
+		<CEC_FLASH_PRESENCE_STS addr="0x24">
+			<SENSOR no="0x1BC" sdr="CEC_FLASH_PRESENCE_STS" scan="ANY,127" />
+		</CEC_FLASH_PRESENCE_STS>
+		<RECOVERY_CLR addr="0x24">
+			<ACCESS_PT no="0x1BF" sdr="RECOVERY_CLR" scan="ANY,1" />
+		</RECOVERY_CLR>
+		<CEC_VERSION addr="0x24">
+			<SENSOR no="0x210" sdr="INTSN_EC_FUN1" scan="ANY,127" />
+		</CEC_VERSION>
+		<CEC_BK_BMC_MAJOR_MINOR addr="0x24">
+			<SENSOR no="0x211" sdr="BKUP_BMC_MAJOR_MINOR_VERSION" scan="ANY,127" />
+		</CEC_BK_BMC_MAJOR_MINOR>
+		<CEC_BK_BMC_AUX addr="0x24">
+			<SENSOR no="0x212" sdr="BKUP_BMC_AUX_VERSION" scan="ANY,127" />
+		</CEC_BK_BMC_AUX>
+		<BMC_BACKUP_STS addr="0x24">
+			<SENSOR no="0x1BD" sdr="BMC_BACKUP_STS" scan="ANY,1" />
+		</BMC_BACKUP_STS>
+	</I2C>
+	<ADC chnl="0">
+		<SENSOR name="P_12V" no="0x40" scan="ON,1" sdr="P_12V_2600" />
+	</ADC>
+	<ADC chnl="1">
+		<SENSOR name="P_5V" no="0x41" scan="ON,2" sdr="P_5V_2600" />
+	</ADC>
+	<ADC chnl="2">
+		<SENSOR name="P_3V3" no="0x42" scan="ON,1" sdr="P_3V3_2600" />
+	</ADC>
+	<ADC chnl="15">
+		<GPIO_SWITCH chnl="141">
+			<SENSOR name="P_VBAT" no="0x4f" scan="ON,0" sdr="P_VBAT_2600" />
+		</GPIO_SWITCH>
+	</ADC>
+	<GPIO_SENSOR b1="170" b7="168" b10="34">
+		<SENSOR no="0xe4" sdr="CPU_STATUS" name="CPU0_Status" scan="ANY,3" />
+	</GPIO_SENSOR>
+	<GPIO_SENSOR b1="171" b7="169" b10="35">
+		<SENSOR no="0xe5" sdr="CPU_STATUS" name="CPU1_Status" scan="ANY,3" />
+	</GPIO_SENSOR>
+	<I2C chnl="4">
+		<PCA9545 addr="0xE2" __link__="19" />
+		<PCA9545 addr="0xEC" __link__="19" />
+		<PCA9545_PARALLEL __taker__="19">
+			<PCA9545_BUS chnl="0">
+				<SCM_CPLD addr="0x2E">
+					<SCM_CPLD_VER cmd="0">
+						<ACCESS_PT no="0x201" scan="ON,1" sdr="MB_CPLD_VER" />
+					</SCM_CPLD_VER>
+				</SCM_CPLD>
+				<CPLD_BIOS_STATUS addr="0x2E">
+					<ACCESS_PT no="0x200" sdr="CPLD_BIOS_STATUS" scan="ON,1" />
+				</CPLD_BIOS_STATUS>
+				<NCT7802Y addr="0x50">
+					<NCT7802Y_TEMP chnl="0">
+						<SENSOR no="0x24" sdr="GPU_TEMP" name="M2_AMB_TEMP1" scan="ON,1" />
+					</NCT7802Y_TEMP>
+					<NCT7802Y_TEMP chnl="1">
+						<SENSOR no="0x25" sdr="GPU_TEMP" name="M2_AMB_TEMP2" scan="ON,1" />
+					</NCT7802Y_TEMP>
+				</NCT7802Y>
+				<ADT7462 addr="0xB0" group="0">
+					<ADT7462_FAN chnl="6">
+						<SENSOR no="0x9C" sdr="BPB_FAN" name="CPU_FAN_0" scan="ON,2" />
+					</ADT7462_FAN>
+					<PLACEHOLDER chnl="6">
+						<SENSOR no="0xB4" scan="ON,2" sdr="FAKE_FAN" />
+					</PLACEHOLDER>
+					<ADT7462_PWM chnl="3">
+						<ACCESS_PT no="0x12A" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_TEMP chnl="0">
+							<SENSOR no="0xD0" sdr="HDD_TEMP" name="FRONT_AIR_TEMP" scan="ON,1" />
+					</ADT7462_TEMP>
+				</ADT7462>
+				<ADT7462 addr="0xB8" group="0">
+					<ADT7462_FAN chnl="6">
+						<SENSOR no="0x9D" sdr="BPB_FAN" name="CPU_FAN_1" scan="ON,2" />
+					</ADT7462_FAN>
+					<PLACEHOLDER chnl="6">
+						<SENSOR no="0xB5" scan="ON,2" sdr="FAKE_FAN" />
+					</PLACEHOLDER>
+					<ADT7462_PWM chnl="3">
+						<ACCESS_PT no="0x12B" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_TEMP chnl="0">
+							<SENSOR no="0xD1" sdr="HDD_TEMP" name="REAR_AIR_TEMP" scan="ON,1" />
+					</ADT7462_TEMP>
+				</ADT7462>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="1">
+				<I2C_DEVICE addr="0x60">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG cmd="0x8D">
+							<SENSOR no="0x43" sdr="VR_TEMP_CPU" name="VR_P0_SOC_TEMP" scan="ON,2" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x88">
+							<SENSOR no="0x50" sdr="VR_VIN_CPU_RAA" name="VR_P0_SOC_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8B">
+							<SENSOR no="0x51" sdr="VR_VOUT_CPU_RAA" name="VR_P0_SOC_Vo" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8C">
+							<SENSOR no="0x80" sdr="VR_IOUT_CPU_RAA" name="VR_P0_SOC_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0x64">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG cmd="0x8D">
+							<SENSOR no="0x44" sdr="VR_TEMP_CPU" name="VR_P0_CORE_TEMP" scan="ON,2" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x88">
+							<SENSOR no="0x5C" sdr="VR_VIN_CPU_RAA" name="VR_P0_CORE_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8B">
+							<SENSOR no="0x45" sdr="VR_VOUT_CPU_RAA" name="VR_P0_CORE_Vo" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8C">
+							<SENSOR no="0x86" sdr="VR_IOUT_CPU_RAA" name="VR_P0_CORE_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0x68">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG cmd="0x8D">
+							<SENSOR no="0x46" sdr="VR_TEMP_CPU" name="VR_P0_VDDIO_TEMP" scan="ON,2" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x88">
+							<SENSOR no="0x54" sdr="VR_VIN_CPU_RAA" name="VR_P0_VDDIO_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8B">
+							<SENSOR no="0x55" sdr="VR_VOUT_CPU_RAA" name="VR_P0_VDDIO_Vo" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8C">
+							<SENSOR no="0x82" sdr="VR_IOUT_CPU_RAA" name="VR_P0_VDDIO_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="2">
+				<I2C_DEVICE addr="0x60">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG cmd="0x8D">
+							<SENSOR no="0x47" sdr="VR_TEMP_CPU" name="VR_P1_SOC_TEMP" scan="ON,2" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x88">
+							<SENSOR no="0x52" sdr="VR_VIN_CPU_RAA" name="VR_P1_SOC_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8B">
+							<SENSOR no="0x53" sdr="VR_VOUT_CPU_RAA" name="VR_P1_SOC_Vo" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8C">
+							<SENSOR no="0x81" sdr="VR_IOUT_CPU_RAA" name="VR_P1_SOC_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0x64">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG cmd="0x8D">
+							<SENSOR no="0x48" sdr="VR_TEMP_CPU" name="VR_P1_CORE_TEMP" scan="ON,2" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x88">
+							<SENSOR no="0x5E" sdr="VR_VIN_CPU_RAA" name="VR_P1_CORE_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8B">
+							<SENSOR no="0x49" sdr="VR_VOUT_CPU_RAA" name="VR_P1_CORE_Vo" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8C">
+							<SENSOR no="0x4B" sdr="VR_IOUT_CPU_RAA" name="VR_P1_CORE_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0x68">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG cmd="0x8D">
+							<SENSOR no="0x4A" sdr="VR_TEMP_CPU" name="VR_P1_VDDIO_TEMP" scan="ON,2" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x88">
+							<SENSOR no="0x58" sdr="VR_VIN_CPU_RAA" name="VR_P1_VDDIO_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8B">
+							<SENSOR no="0x59" sdr="VR_VOUT_CPU_RAA" name="VR_P1_VDDIO_Vo" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+						<PMBUS_ANALOG cmd="0x8C">
+							<SENSOR no="0x83" sdr="VR_IOUT_CPU_RAA" name="VR_P1_VDDIO_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="10">
+				<CAT34TS02_TEMP addr="0x3E">
+					<SENSOR no="0x0B" sdr="INLET_AIR_TEMP" name="INLET_AIR_TEMP" scan="ON,1" />
+				</CAT34TS02_TEMP>
+				<SCM_CPLD addr="0x2C">
+					<SCM_CPLD_VER cmd="0">
+						<ACCESS_PT no="0x194" scan="ON,1" sdr="CPLD_VERSION" />
+					</SCM_CPLD_VER>
+				</SCM_CPLD>
+			</PCA9545_BUS>
+		</PCA9545_PARALLEL>
+	</I2C>
+	<I2C chnl="5">
+		<PCA9545 addr="0xE2" __link__="9" />
+		<PCA9545 addr="0xE4" __link__="9" />
+		<PCA9545 addr="0xE6" __link__="9" />
+		<PCA9545 addr="0xE8" __link__="9" />
+		<PCA9545_PARALLEL __taker__="9">
+			<PCA9545_BUS chnl="0">
+				<INA219 addr="0x88" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x88" sdr="I100_1020_ina" name="P12V_S1" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x63" sdr="ADM1278_VOUT" name="P_12V_SLOT1" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x8A" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x89" sdr="I100_1020_ina" name="P12V_S2" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x64" sdr="ADM1278_VOUT" name="P_12V_SLOT2" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="1">
+				<INA219 addr="0x88" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x8A" sdr="I100_1020_ina" name="P12V_S3" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x65" sdr="ADM1278_VOUT" name="P_12V_SLOT3" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x8A" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x8B" sdr="I100_1020_ina" name="P12V_S4" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x66" sdr="ADM1278_VOUT" name="P_12V_SLOT4" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="2">
+				<INA219 addr="0x88" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x8C" sdr="I100_1020_ina" name="P12V_S5" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x67" sdr="ADM1278_VOUT" name="P_12V_SLOT5" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x8A" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x8D" sdr="I100_1020_ina" name="P12V_S6" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x68" sdr="ADM1278_VOUT" name="P_12V_SLOT6" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="3">
+				<INA219 addr="0x88" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x8E" sdr="I100_1020_ina" name="P12V_S7" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x69" sdr="ADM1278_VOUT" name="P_12V_SLOT7" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x8A" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x8F" sdr="I100_1020_ina" name="P12V_S8" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x6A" sdr="ADM1278_VOUT" name="P_12V_SLOT8" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="4">
+				<INA219 addr="0x88" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x87" sdr="I100_1020_ina" name="P12V_S9" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x6E" sdr="ADM1278_VOUT" name="P_12V_SLOT9" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x8A" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x71" sdr="I100_1020_ina" name="P12V_S10" scan="ON,1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x73" sdr="ADM1278_VOUT" name="P_12V_SLOT10" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="6">
+				<INA219 addr="0x88" calib="0x5000">
+					<INA219_CUR_M2 acclosing="3">
+						<SENSOR no="0x84" sdr="I57_1020" name="12V_FAN1" scan="ON,1" hide="1" />
+					</INA219_CUR_M2>
+					<INA219_VOLT>
+						<SENSOR no="0x74" sdr="ADM1278_VOUT" name="P_12V_FAN1" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+
+			<PCA9545_BUS chnl="7">
+				<ADT7462 addr="0xB8" group="1">
+					<PLACEHOLDER chnl="0">
+						<SENSOR no="0xC4" sdr="FAKE_FAN" scan="ON,2" />
+					</PLACEHOLDER>
+					<ADT7462_FAN chnl="0">
+						<SENSOR no="0xC2" sdr="BPB_FAN" name="EXT_FAN1" scan="ON,2" />
+					</ADT7462_FAN>
+					<PLACEHOLDER chnl="2">
+						<SENSOR no="0xC5" sdr="FAKE_FAN" scan="ON,2" />
+					</PLACEHOLDER>
+					<ADT7462_FAN chnl="2">
+						<SENSOR no="0xC3" sdr="BPB_FAN" name="EXT_FAN3" scan="ON,2" />
+					</ADT7462_FAN>
+					<ADT7462_PWM chnl="0">
+						<ACCESS_PT no="0x11C" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="2">
+						<ACCESS_PT no="0x11D" sdr="PWM" />
+					</ADT7462_PWM>
+				</ADT7462>
+			</PCA9545_BUS>
+
+			<PCA9545_BUS chnl="8">
+				<INA219 addr="0x80" calib="0x1ECA">
+					<INA219_CUR acclosing="4">
+						<SENSOR no="0x92" sdr="ADM1278_IOUT_MB" name="12V_MB" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x6B" sdr="ADM1278_VOUT" name="P_12V_MB" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x82" calib="0x1ECA">
+					<INA219_CUR acclosing="2">
+						<SENSOR no="0x93" sdr="ADM1278_IOUT_SBY" name="12V_STBY" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x6C" sdr="ADM1278_VOUT" name="P_12V_STBY" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="9">
+				<I2C_DEVICE addr="0xB0">
+					<PMBUS_STATUS redun="0">
+						<SENSOR no="0xE6" sdr="PSU_STATUS" name="PS1_Status" scan="ON,1" />
+					</PMBUS_STATUS>
+					<PMBUS_ANALOG cmd="0x8E">
+						<SENSOR no="0x30" sdr="PSU_HOTSPOT1" name="PSU1_HOTSPOT" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_ANALOG cmd="0x97" __link__="8">
+						<SENSOR no="0x108" sdr="PSU_POWER" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_INFO cmd="0x9A">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_MODEL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xD9">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_FWVERSION" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x9E">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_SERIAL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA3">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_MAX_PIN" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_MAX_POUT" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_POWER_CAPACITY" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x96">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_LAST_POWER" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x88">
+						<REDIS node="0xE6" sdr="PSU_INFO" name="PSU1_INPUT_VOLTAGE" scan="ON,1" />
+					</PMBUS_INFO>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0xB2">
+					<PMBUS_STATUS redun="0">
+						<SENSOR no="0xE7" sdr="PSU_STATUS" name="PS2_Status" scan="ON,1" />
+					</PMBUS_STATUS>
+					<PMBUS_ANALOG cmd="0x8E">
+						<SENSOR no="0x31" sdr="PSU_HOTSPOT1" name="PSU2_HOTSPOT" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_ANALOG cmd="0x97" __link__="8">
+						<SENSOR no="0x109" sdr="PSU_POWER" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_INFO cmd="0x9A">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_MODEL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xD9">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_FWVERSION" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x9E">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_SERIAL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA3">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_MAX_PIN" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_MAX_POUT" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_POWER_CAPACITY" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x96">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_LAST_POWER" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x88">
+						<REDIS node="0xE7" sdr="PSU_INFO" name="PSU2_INPUT_VOLTAGE" scan="ON,1" />
+					</PMBUS_INFO>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0xB4">
+					<PMBUS_STATUS redun="0">
+						<SENSOR no="0xEC" sdr="PSU_STATUS" name="PS3_Status" scan="ON,1" />
+					</PMBUS_STATUS>
+					<PMBUS_ANALOG cmd="0x8E">
+						<SENSOR no="0x32" sdr="PSU_HOTSPOT1" name="PSU3_HOTSPOT" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_ANALOG cmd="0x97" __link__="8">
+						<SENSOR no="0x10A" sdr="PSU_POWER" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_INFO cmd="0x9A">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_MODEL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xD9">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_FWVERSION" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x9E">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_SERIAL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA3">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_MAX_PIN" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_MAX_POUT" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_POWER_CAPACITY" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x96">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_LAST_POWER" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x88">
+						<REDIS node="0xEC" sdr="PSU_INFO" name="PSU3_INPUT_VOLTAGE" scan="ON,1" />
+					</PMBUS_INFO>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0xB6">
+					<PMBUS_STATUS redun="0">
+						<SENSOR no="0xED" sdr="PSU_STATUS" name="PS4_Status" scan="ON,1" />
+					</PMBUS_STATUS>
+					<PMBUS_ANALOG cmd="0x8E">
+						<SENSOR no="0x33" sdr="PSU_HOTSPOT1" name="PSU4_HOTSPOT" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_ANALOG cmd="0x97" __link__="8">
+						<SENSOR no="0x10B" sdr="PSU_POWER" scan="ON,1" />
+					</PMBUS_ANALOG>
+					<PMBUS_INFO cmd="0x9A">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_MODEL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xD9">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_FWVERSION" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x9E">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_SERIAL" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA3">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_MAX_PIN" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_MAX_POUT" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0xA7">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_POWER_CAPACITY" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x96">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_LAST_POWER" scan="ON,1" />
+					</PMBUS_INFO>
+					<PMBUS_INFO cmd="0x88">
+						<REDIS node="0xED" sdr="PSU_INFO" name="PSU4_INPUT_VOLTAGE" scan="ON,1" />
+					</PMBUS_INFO>
+				</I2C_DEVICE>
+				<SUM __taker__="8">
+					<DIVIDE divisor="75">
+						<SENSOR no="0x08" scan="ON,1" sdr="SYS_POWER_18K" name="SYS_POWER" />
+					</DIVIDE>
+				</SUM>
+				<PMBUS_COLD_REDUNDANT def="0">
+					<ACCESS_PT no="0x1B9" sdr="PSU_REDUNDANT" />
+				</PMBUS_COLD_REDUNDANT>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="10">
+				<INA219 addr="0x80" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x90" sdr="ADM1278_12V_CPU2" name="12V_CPU0" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x60" sdr="ADM1278_VOUT" name="P_12V_CPU0" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x82" calib="0x1ECA">
+					<INA219_CUR acclosing="5">
+						<SENSOR no="0x91" sdr="ADM1278_12V_CPU2" name="12V_CPU1" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x61" sdr="ADM1278_VOUT" name="P_12V_CPU1" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="11">
+				<INA219 addr="0x88" calib="0x1ECA">
+					<INA219_CUR acclosing="4">
+						<SENSOR no="0x99" sdr="ADM1278_IOUT_MB" name="12V" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x9B" sdr="ADM1278_VOUT" name="P_12V" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x80" calib="0x1ECA">
+					<INA219_CUR acclosing="4">
+						<SENSOR no="0x98" sdr="ADM1278_IOUT" name="12V_A" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x70" sdr="ADM1278_VOUT" name="P_12V_A" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x82" calib="0x1ECA">
+					<INA219_CUR acclosing="4">
+						<SENSOR no="0x9A" sdr="ADM1278_IOUT" name="12V_B" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x72" sdr="ADM1278_VOUT" name="P_12V_B" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x8A" calib="0x1ECA">
+					<INA219_CUR acclosing="4">
+						<SENSOR no="0x9E" sdr="ADM1278_IOUT_MB" name="12V_C" scan="ON,1" hide="1" />
+					</INA219_CUR>
+					<INA219_VOLT>
+						<SENSOR no="0x9F" sdr="ADM1278_VOUT" name="P_12V_C" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="17">
+				<ADT7462 addr="0xB0" group="2">
+					<ADT7462_FAN chnl="0">
+						<SENSOR name="SYS_FAN1" no="0xA1" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="1">
+						<SENSOR name="SYS_FAN2" no="0xA2" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="2">
+						<SENSOR name="SYS_FAN3" no="0xA3" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="3">
+						<SENSOR name="SYS_FAN4" no="0xA4" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="4">
+						<SENSOR name="SYS_FAN5" no="0xA5" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="5">
+						<SENSOR name="SYS_FAN6" no="0xAE" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="6">
+						<SENSOR name="SYS_FAN7" no="0xB8" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="7">
+						<SENSOR name="SYS_FAN8" no="0xA7" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_PWM chnl="0">
+						<ACCESS_PT no="0x118" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="1">
+						<ACCESS_PT no="0x119" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="2">
+						<ACCESS_PT no="0x11A" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="3">
+						<ACCESS_PT no="0x11B" sdr="PWM" />
+					</ADT7462_PWM>
+				</ADT7462>
+				<ADT7462 addr="0xB8" group="2">
+					<ADT7462_FAN chnl="0">
+						<SENSOR name="SYS_FAN9" no="0xA8" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="1">
+						<SENSOR name="SYS_FAN10" no="0xA9" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="2">
+						<SENSOR name="SYS_FAN11" no="0xAA" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="3">
+						<SENSOR name="SYS_FAN12" no="0xAB" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="4">
+						<SENSOR name="SYS_FAN13" no="0xD2" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="5">
+						<SENSOR name="SYS_FAN14" no="0xD3" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="6">
+						<SENSOR name="SYS_FAN15" no="0xD4" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="7">
+						<SENSOR name="SYS_FAN16" no="0xD5" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_PWM chnl="0">
+						<ACCESS_PT no="0x11F" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="1">
+						<ACCESS_PT no="0x120" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="2">
+						<ACCESS_PT no="0x121" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="3">
+						<ACCESS_PT no="0x122" sdr="PWM" />
+					</ADT7462_PWM>
+				</ADT7462>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="18">
+				<ADT7462 addr="0xB0" group="3">
+					<ADT7462_FAN chnl="0">
+						<SENSOR name="SYS_FAN17" no="0xD6" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="1">
+						<SENSOR name="SYS_FAN18" no="0xD7" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="2">
+						<SENSOR name="SYS_FAN19" no="0xD8" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="3">
+						<SENSOR name="SYS_FAN20" no="0xD9" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="4">
+						<SENSOR name="SYS_FAN21" no="0xDA" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="5">
+						<SENSOR name="SYS_FAN22" no="0xDB" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="6">
+						<SENSOR name="SYS_FAN23" no="0xDC" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="7">
+						<SENSOR name="SYS_FAN24" no="0xDD" scan="ON,2" sdr="BPB_FAN" />
+					</ADT7462_FAN>
+					<ADT7462_PWM chnl="0">
+						<ACCESS_PT no="0x123" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="1">
+						<ACCESS_PT no="0x124" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="2">
+						<ACCESS_PT no="0x125" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="3">
+						<ACCESS_PT no="0x126" sdr="PWM" />
+					</ADT7462_PWM>
+				</ADT7462>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="24">
+				<INA219 addr="0x88" calib="0x5000">
+					<INA219_CUR_M2 acclosing="3">
+						<SENSOR no="0x94" sdr="I57_1020" name="VR_12V_FAN1" scan="ON,1" hide="1" />
+					</INA219_CUR_M2>
+					<INA219_VOLT>
+						<SENSOR no="0x62" sdr="ADM1278_VOUT" name="P_VR_12V_FAN1" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<INA219 addr="0x8A" calib="0x5000">
+					<INA219_CUR_M2 acclosing="3">
+						<SENSOR no="0x95" sdr="I57_1020" name="VR_12V_FAN2" scan="ON,1" hide="1" />
+					</INA219_CUR_M2>
+					<INA219_VOLT>
+						<SENSOR no="0x6F" sdr="ADM1278_VOUT" name="P_VR_12V_FAN2" scan="ON,1" hide="1" />
+					</INA219_VOLT>
+				</INA219>
+				<ADT7462 addr="0xb8" group="4">
+					<ADT7462_FAN chnl="0">
+						<SENSOR name="REAR_FAN1" no="0xB0" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="1">
+						<SENSOR name="REAR_FAN2" no="0xB1" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="2">
+						<SENSOR name="REAR_FAN3" no="0xB2" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="3">
+						<SENSOR name="REAR_FAN4" no="0xB3" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="4">
+						<SENSOR name="REAR_FAN5" no="0xC0" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="5">
+						<SENSOR name="REAR_FAN6" no="0xC1" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="6">
+						<SENSOR name="REAR_FAN7" no="0xC6" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_FAN chnl="7">
+						<SENSOR name="REAR_FAN8" no="0xC7" scan="ON,2" sdr="BPB_FAN_80" />
+					</ADT7462_FAN>
+					<ADT7462_PWM chnl="0">
+						<ACCESS_PT no="0x130" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="1">
+						<ACCESS_PT no="0x131" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="2">
+						<ACCESS_PT no="0x132" sdr="PWM" />
+					</ADT7462_PWM>
+					<ADT7462_PWM chnl="3">
+						<ACCESS_PT no="0x133" sdr="PWM" />
+					</ADT7462_PWM>
+				</ADT7462>
+			</PCA9545_BUS>
+		</PCA9545_PARALLEL>
+	</I2C>
+	<I2C_BONDING primary="8">
+		<I2C_SLAVE forward="8" interface="0">
+			<CAT34TS02_TEMP addr="0x32">
+				<SENSOR no="0x35" sdr="HDD_TEMP" name="BPB_TEMP" scan="ON,1" />
+			</CAT34TS02_TEMP>
+		</I2C_SLAVE>
+		<I2C_SLAVE forward="11" interface="1">
+			<TCA9548 addr="0xE0" __link__="21" />
+			<TCA9548 addr="0xE2" __link__="21" />
+			<TCA9548_PARALLEL __taker__="21">
+				<TCA9548_BUS chnl="0">
+					<NVME_TEMP __link__="7" slot="0" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="1">
+					<NVME_TEMP __link__="7" slot="1" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="2">
+					<NVME_TEMP __link__="7" slot="2" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="3">
+					<NVME_TEMP __link__="7" slot="3" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="4">
+					<NVME_TEMP __link__="7" slot="4" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="5">
+					<NVME_TEMP __link__="7" slot="5" />
+				</TCA9548_BUS>
+				<MAX __taker__="7">
+					<SENSOR name="NVMeG0_TEMP" no="0x36" scan="ON,1" sdr="NVME_TEMP" />
+				</MAX>
+				<TCA9548_BUS chnl="8">
+					<NVME_TEMP __link__="10" slot="6" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="9">
+					<NVME_TEMP __link__="10" slot="7" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="10">
+					<NVME_TEMP __link__="10" slot="8" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="11">
+					<NVME_TEMP __link__="10" slot="9" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="12">
+					<NVME_TEMP __link__="10" slot="10" />
+				</TCA9548_BUS>
+				<TCA9548_BUS chnl="13">
+					<NVME_TEMP __link__="10" slot="11" />
+				</TCA9548_BUS>
+				<MAX __taker__="10">
+					<SENSOR name="NVMeG1_TEMP" no="0x37" scan="ON,1" sdr="NVME_TEMP" />
+				</MAX>
+			</TCA9548_PARALLEL>
+		</I2C_SLAVE>
+	</I2C_BONDING>
+	<SGPIO order="0" shift="1" swap="1">
+		<CPLD cksum="1" debug="0" scanning="1">
+			<CHAIN_CPLD_REV chnl="0">
+				<ACCESS_PT no="0x190" scan="ON,2" sdr="CHAIN_CPLD_REV" />
+			</CHAIN_CPLD_REV>
+			<CHAIN_CPLD_STATUS>
+				<ACCESS_PT no="0x191" scan="ON,2" sdr="CHAIN_CPLD_STATUS" />
+			</CHAIN_CPLD_STATUS>
+			<CHAIN_CPLD_INFO>
+				<ACCESS_PT no="0x1A0" scan="ON,5" sdr="CHAIN_CPLD_INFO" />
+			</CHAIN_CPLD_INFO>
+		</CPLD>
+	</SGPIO>
+</AST2600>

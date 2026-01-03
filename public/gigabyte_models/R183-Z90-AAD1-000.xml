@@ -1,0 +1,514 @@
+<AST2600 model="R183-Z90-AAV1-000" version="1756478868">
+	<I2C chnl="2">
+		<IMX3112 addr="0xE0">
+			<IMX3112_BUS chnl="0">
+				<APML_CPU addr="0x98">
+					<SENSOR no="0x01" sdr="AMD_CPU_TEMP" name="CPU0_TEMP" scan="ON,3" />
+				</APML_CPU>
+				<I2C_DEVICE addr="0x78">
+					<APML_CPU_CAPPING>
+						<ACCESS_PT no="0x180" sdr="APML_CAPPING" />
+					</APML_CPU_CAPPING>
+					<APML_CPU_PWR>
+						<ACCESS_PT no="0x182" sdr="APML_PWR" />
+					</APML_CPU_PWR>
+					<APML_READ_CPU_CTDP>
+						<ACCESS_PT no="0x186" sdr="APML_CTDP" />
+					</APML_READ_CPU_CTDP>
+					<APML_CPU_INFO>
+						<SENSOR no="0x100" sdr="CPU_INFO" scan="ON,1" />
+					</APML_CPU_INFO>
+					<APML_DIMM addr="0x03" __link__="1" />
+					<APML_DIMM addr="0x04" __link__="1" />
+					<APML_DIMM addr="0x00" __link__="1" />
+					<APML_DIMM addr="0x05" __link__="1" />
+					<APML_DIMM addr="0x01" __link__="1" />
+					<APML_DIMM addr="0x02" __link__="1" />
+					<APML_DIMM addr="0x09" __link__="2" />
+					<APML_DIMM addr="0x0a" __link__="2" />
+					<APML_DIMM addr="0x06" __link__="2" />
+					<APML_DIMM addr="0x0b" __link__="2" />
+					<APML_DIMM addr="0x07" __link__="2" />
+					<APML_DIMM addr="0x08" __link__="2" />
+					<MAX __taker__="1">
+						<SENSOR no="0x04" sdr="DIMM_TEMP_DDR5" name="DIMMG0_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="2">
+						<SENSOR no="0x05" sdr="DIMM_TEMP_DDR5" name="DIMMG1_TEMP" scan="ON,3" />
+					</MAX>
+				</I2C_DEVICE>
+			</IMX3112_BUS>
+			<IMX3112_BUS chnl="1">
+				<APML_CPU addr="0x90">
+					<SENSOR no="0x02" sdr="AMD_CPU_TEMP" name="CPU1_TEMP" scan="ON,3" />
+				</APML_CPU>
+				<I2C_DEVICE addr="0x70">
+					<APML_CPU_CAPPING>
+						<ACCESS_PT no="0x184" sdr="APML_CAPPING" />
+					</APML_CPU_CAPPING>
+					<APML_CPU_PWR>
+						<ACCESS_PT no="0x185" sdr="APML_PWR" />
+					</APML_CPU_PWR>
+					<APML_READ_CPU_CTDP>
+						<ACCESS_PT no="0x187" sdr="APML_CTDP" />
+					</APML_READ_CPU_CTDP>
+					<APML_CPU_INFO>
+						<SENSOR no="0x102" sdr="CPU_INFO" scan="ON,1" />
+					</APML_CPU_INFO>
+					<APML_DIMM addr="0x03" __link__="3" />
+					<APML_DIMM addr="0x04" __link__="3" />
+					<APML_DIMM addr="0x00" __link__="3" />
+					<APML_DIMM addr="0x05" __link__="3" />
+					<APML_DIMM addr="0x01" __link__="3" />
+					<APML_DIMM addr="0x02" __link__="3" />
+					<APML_DIMM addr="0x09" __link__="4" />
+					<APML_DIMM addr="0x0a" __link__="4" />
+					<APML_DIMM addr="0x06" __link__="4" />
+					<APML_DIMM addr="0x0b" __link__="4" />
+					<APML_DIMM addr="0x07" __link__="4" />
+					<APML_DIMM addr="0x08" __link__="4" />
+					<MAX __taker__="3">
+						<SENSOR no="0x06" sdr="DIMM_TEMP_DDR5" name="DIMMG2_TEMP" scan="ON,3" />
+					</MAX>
+					<MAX __taker__="4">
+						<SENSOR no="0x07" sdr="DIMM_TEMP_DDR5" name="DIMMG3_TEMP" scan="ON,3" />
+					</MAX>
+				</I2C_DEVICE>
+			</IMX3112_BUS>
+		</IMX3112>
+	</I2C>
+	<ADC chnl="0">
+		<SENSOR name="SCM_P_12V" no="0x40" scan="ON,2" sdr="P_12V_2600" />
+	</ADC>
+	<ADC chnl="1">
+		<SENSOR name="SCM_P_5V" no="0x42" scan="ON,2" sdr="P_5V_2600" />
+	</ADC>
+	<ADC chnl="2">
+		<SENSOR name="SCM_P_3V3" no="0x41" scan="ON,2" sdr="P_3V3_2600" />
+	</ADC>
+	<ADC chnl="3">
+		<SENSOR name="SCM_P_2V5" no="0x43" scan="ON,2" sdr="P_2V5_2600" />
+	</ADC>
+	<ADC chnl="5">
+		<SENSOR name="SCM_P_1V2" no="0x46" scan="ON,2" sdr="P_1V2_2600" />
+	</ADC>
+	<ADC chnl="15">
+		<GPIO_SWITCH chnl="141">
+			<SENSOR no="0x45" scan="ON,0" sdr="P_VBAT_2600" />
+		</GPIO_SWITCH>
+	</ADC>
+	<GPIO_SENSOR b1="170" b10="34" b7="168">
+		<SENSOR name="CPU0_Status" no="0xe4" scan="ANY,3" sdr="CPU_STATUS" />
+	</GPIO_SENSOR>
+	<GPIO_SENSOR b1="171" b10="35" b7="169">
+		<SENSOR name="CPU1_Status" no="0xe5" scan="ANY,3" sdr="CPU_STATUS" />
+	</GPIO_SENSOR>
+	<I2C chnl="1">
+		<PCA9545 addr="0xE6">
+			<PCA9545_BUS chnl="1">
+				<PCA9545 addr="0xE0">
+					<PCA9545_BUS chnl="0">
+						<PCA9545 addr="0xE8">
+							<PCA9545_BUS chnl="2">
+								<F75308_TEMP addr="0x58" chnl="0" __link__="17" />
+								<F75308_TEMP addr="0x58" chnl="1" __link__="17" />
+								<F75308_TEMP addr="0x58" chnl="2" __link__="17" />
+								<F75308_TEMP addr="0x58" chnl="3" __link__="17" />
+								<MAX __taker__="17">
+									<SENSOR no="0x2C" sdr="GPU_TEMP" name="SLOT3_M2_TEMP" scan="ON,1" />
+								</MAX>
+							</PCA9545_BUS>
+						</PCA9545>
+						<OCPCARD_TEMP>
+							<SENSOR name="SLOT3_TEMP" no="0x20" scan="ON,1" sdr="OCP_TEMP" />
+						</OCPCARD_TEMP>
+						<RAID_INFO addr="0x02">
+							<SENSOR no="0x240" sdr="RAID_INFO" scan="ON,60" />
+						</RAID_INFO>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="2">
+						<INA219 addr="0x80" calib="0x3D94">
+							<INA219_CUR acclosing="6">
+								<SENSOR no="0x9F" sdr="ADM1278_IOUT" name="P12V_S1" scan="ON,1" hide="1" />
+							</INA219_CUR>
+						</INA219>
+					</PCA9545_BUS>
+				</PCA9545>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="2">
+				<PCA9545 addr="0xE0">
+					<PCA9545_BUS chnl="0">
+						<PCA9545 addr="0xE8">
+							<PCA9545_BUS chnl="2">
+								<F75308_TEMP addr="0x58" chnl="0" __link__="18" />
+								<F75308_TEMP addr="0x58" chnl="1" __link__="18" />
+								<F75308_TEMP addr="0x58" chnl="2" __link__="18" />
+								<F75308_TEMP addr="0x58" chnl="3" __link__="18" />
+								<MAX __taker__="18">
+									<SENSOR no="0x2D" sdr="GPU_TEMP" name="SLOT4_M2_TEMP" scan="ON,1" />
+								</MAX>
+							</PCA9545_BUS>
+						</PCA9545>
+						<OCPCARD_TEMP>
+							<SENSOR name="SLOT4_TEMP" no="0x21" scan="ON,1" sdr="OCP_TEMP" />
+						</OCPCARD_TEMP>
+						<RAID_INFO addr="0x02">
+							<SENSOR no="0x241" sdr="RAID_INFO" scan="ON,60" />
+						</RAID_INFO>
+					</PCA9545_BUS>
+					<PCA9545_BUS chnl="2">
+						<INA219 addr="0x80" calib="0x3D94">
+							<INA219_CUR acclosing="6">
+								<SENSOR no="0x9D" sdr="ADM1278_IOUT" name="P12V_S2" scan="ON,1" hide="1" />
+							</INA219_CUR>
+						</INA219>
+					</PCA9545_BUS>
+				</PCA9545>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="4">
+				<OCPCARD_TEMP>
+					<SENSOR name="SLOT1_TEMP" no="0x24" scan="ON,1" sdr="OCP_TEMP" />
+				</OCPCARD_TEMP>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="5">
+				<OCPCARD_TEMP>
+					<SENSOR name="SLOT2_TEMP" no="0x27" scan="ON,1" sdr="OCP_TEMP" />
+				</OCPCARD_TEMP>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="0xFE">
+				<UPDATER scan="ON,1" />
+			</PCA9545_BUS>
+		</PCA9545>
+	</I2C>
+	<I2C chnl="5">
+		<I2C_DEVICE addr="0xB0">
+			<PMBUS_STATUS redun="1">
+				<SENSOR name="PS1_Status" no="0xE6" scan="ON,1" sdr="PSU_STATUS" />
+			</PMBUS_STATUS>
+			<PMBUS_ANALOG cmd="0x8E">
+				<SENSOR name="PSU1_HOTSPOT" no="0x30" scan="ON,1" sdr="PSU_TEMP" />
+			</PMBUS_ANALOG>
+			<PMBUS_ANALOG __link__="14" cmd="0x97">
+				<SENSOR no="0x108" scan="ON,1" sdr="PSU_POWER" />
+			</PMBUS_ANALOG>
+		</I2C_DEVICE>
+		<I2C_DEVICE addr="0xB2">
+			<PMBUS_STATUS redun="2">
+				<SENSOR name="PS2_Status" no="0xE7" scan="ON,1" sdr="PSU_STATUS" />
+			</PMBUS_STATUS>
+			<PMBUS_ANALOG cmd="0x8E">
+				<SENSOR name="PSU2_HOTSPOT" no="0x31" scan="ON,1" sdr="PSU_TEMP" />
+			</PMBUS_ANALOG>
+			<PMBUS_ANALOG __link__="14" cmd="0x97">
+				<SENSOR no="0x109" scan="ON,1" sdr="PSU_POWER" />
+			</PMBUS_ANALOG>
+		</I2C_DEVICE>
+		<SUM __taker__="14">
+			<DIVIDE divisor="25">
+				<SENSOR no="0xE9" scan="ON,1" sdr="SYS_POWER" />
+			</DIVIDE>
+		</SUM>
+		<PMBUS_COLD_REDUNDANT def="1">
+			<ACCESS_PT no="0x1B9" sdr="PSU_REDUNDANT" />
+		</PMBUS_COLD_REDUNDANT>
+	</I2C>
+	<I2C chnl="4">
+		<PCA9545 addr="0xE2">
+			<PCA9545_BUS chnl="0">
+				<SCM_CPLD addr="0x2E">
+					<SCM_CPLD_VER cmd="0">
+						<ACCESS_PT no="0x201" scan="ON,1" sdr="MB_CPLD_VER" />
+					</SCM_CPLD_VER>
+				</SCM_CPLD>
+				<SCM_CPLD addr="0x2C">
+					<SCM_CPLD_VER cmd="0">
+						<ACCESS_PT no="0x194" scan="ON,1" sdr="CPLD_VERSION" />
+					</SCM_CPLD_VER>
+				</SCM_CPLD>
+				<CPLD_BIOS_STATUS addr="0x2E">
+					<ACCESS_PT no="0x200" scan="ON,1" sdr="CPLD_BIOS_STATUS" />
+				</CPLD_BIOS_STATUS>
+				<NCT7802Y addr="0x50">
+					<NCT7802Y_TEMP chnl="0">
+						<SENSOR no="0x1C" sdr="GPU_TEMP" name="M2_AMB_TEMP_1" scan="ON,1" />
+					</NCT7802Y_TEMP>
+					<NCT7802Y_TEMP chnl="1">
+						<SENSOR no="0x1E" sdr="GPU_TEMP" name="M2_AMB_TEMP_2" scan="ON,1" />
+					</NCT7802Y_TEMP>
+				</NCT7802Y>
+				<NCT7802Y addr="0x52">
+					<NCT7802Y_TEMP chnl="0">
+						<SENSOR no="0x1D" sdr="GPU_TEMP" name="M2_AMB_TEMP_3" scan="ON,1" />
+					</NCT7802Y_TEMP>
+				</NCT7802Y>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="1">
+				<I2C_DEVICE addr="0xC2">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x4c" sdr="110_120_TEMP_SP6" name="VR_VCORE_0_P0_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x88">
+							<SENSOR no="0x50" sdr="VR_VIN_CPU_RAA" name="VR_P0_SOC_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8B">
+							<SENSOR no="0x51" sdr="V1.7_1015" name="VR_VDD_CORE_0_P0" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8C">
+							<SENSOR no="0x80" sdr="I330_1020" name="VR_VCORE_0_P0_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+					<PMBUS_PAGE page="1">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x0E" sdr="110_120_TEMP_SP6" name="VR_VSOC_P0_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0xC4">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x4f" sdr="110_120_TEMP_SP6" name="VR_VCORE_1_P0_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x88">
+							<SENSOR no="0x5C" sdr="VR_VIN_CPU_RAA" name="VR_P0_CORE_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8B">
+							<SENSOR no="0x4d" sdr="V1.7_1015" name="VR_VDD_CORE_1_P0" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8C">
+							<SENSOR no="0x86" sdr="I330_1020" name="VR_VCORE_1_P0_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+					<PMBUS_PAGE page="1">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x0F" sdr="110_120_TEMP_SP6" name="VR_VDD11_P0_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0xC6">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x4e" sdr="110_120_TEMP_SP6" name="VR_VDDIO_P0_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x88">
+							<SENSOR no="0x54" sdr="VR_VIN_CPU_RAA" name="VR_P0_VDDIO_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8B">
+							<SENSOR no="0x55" sdr="V1.28_1015" name="VR_VDDIO_P0" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8C">
+							<SENSOR no="0x82" sdr="I140_1020" name="VR_VDDIO_P0_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+			</PCA9545_BUS>
+			<PCA9545_BUS chnl="2">
+				<I2C_DEVICE addr="0xC2">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x56" sdr="110_120_TEMP_SP6" name="VR_VCORE_0_P1_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x88">
+							<SENSOR no="0x52" sdr="VR_VIN_CPU_RAA" name="VR_P1_SOC_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8B">
+							<SENSOR no="0x53" sdr="V1.7_1015" name="VR_VDD_CORE_0_P1" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8C">
+							<SENSOR no="0x81" sdr="I330_1020" name="VR_VCORE_0_P1_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+					<PMBUS_PAGE page="1">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x10" sdr="110_120_TEMP_SP6" name="VR_VSOC_P1_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0xC4">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x48" sdr="110_120_TEMP_SP6" name="VR_VCORE_1_P1_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x88">
+							<SENSOR no="0x5E" sdr="VR_VIN_CPU_RAA" name="VR_P1_CORE_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8B">
+							<SENSOR no="0x49" sdr="V1.7_1015" name="VR_VDD_CORE_1_P1" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8C">
+							<SENSOR no="0x4B" sdr="I330_1020" name="VR_VCORE_1_P1_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+					<PMBUS_PAGE page="1">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x11" sdr="110_120_TEMP_SP6" name="VR_VDD11_P1_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+				<I2C_DEVICE addr="0xC6">
+					<PMBUS_PAGE page="0">
+						<PMBUS_ANALOG_RAAXX cmd="0x8D">
+							<SENSOR no="0x4A" sdr="110_120_TEMP_SP6" name="VR_VDDIO_P1_Tj" scan="ON,2" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x88">
+							<SENSOR no="0x58" sdr="VR_VIN_CPU_RAA" name="VR_P1_VDDIO_Vin" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8B">
+							<SENSOR no="0x59" sdr="V1.28_1015" name="VR_VDDIO_P1" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+						<PMBUS_ANALOG_RAAXX cmd="0x8C">
+							<SENSOR no="0x83" sdr="I140_1020" name="VR_VDDIO_P1_Io" scan="ON,2" hide="1" />
+						</PMBUS_ANALOG_RAAXX>
+					</PMBUS_PAGE>
+				</I2C_DEVICE>
+			</PCA9545_BUS>
+		</PCA9545>
+	</I2C>
+	<I2C chnl="7">
+		<TMP75 addr="0x9E">
+			<SENSOR no="0x0B" scan="ON,1" sdr="INLET_AIR_TEMP" />
+		</TMP75>
+		<RECOVERY_STS addr="0x24">
+			<SENSOR no="0x1BA" sdr="RECOVERY_STS" scan="ANY,1" />
+		</RECOVERY_STS>
+		<CEC_PIN_STS addr="0x24">
+			<SENSOR no="0x1BB" sdr="CEC_PIN_STS" scan="ANY,1" />
+		</CEC_PIN_STS>
+		<CEC_FLASH_PRESENCE_STS addr="0x24">
+			<SENSOR no="0x1BC" sdr="CEC_FLASH_PRESENCE_STS" scan="ANY,127" />
+		</CEC_FLASH_PRESENCE_STS>
+		<RECOVERY_CLR addr="0x24">
+			<ACCESS_PT no="0x1BF" sdr="RECOVERY_CLR" scan="ANY,1" />
+		</RECOVERY_CLR>
+		<CEC_VERSION addr="0x24">
+			<SENSOR no="0x210" sdr="INTSN_EC_FUN1" scan="ANY,127" />
+		</CEC_VERSION>
+		<CEC_BK_BMC_MAJOR_MINOR addr="0x24">
+			<SENSOR no="0x211" sdr="BKUP_BMC_MAJOR_MINOR_VERSION" scan="ANY,127" />
+		</CEC_BK_BMC_MAJOR_MINOR>
+		<CEC_BK_BMC_AUX addr="0x24">
+			<SENSOR no="0x212" sdr="BKUP_BMC_AUX_VERSION" scan="ANY,127" />
+		</CEC_BK_BMC_AUX>
+		<BMC_BACKUP_STS addr="0x24">
+			<SENSOR no="0x1BD" sdr="BMC_BACKUP_STS" scan="ANY,1" />
+		</BMC_BACKUP_STS>
+	</I2C>
+	<I2C_BONDING primary="8">
+	<I2C_SLAVE forward="11" interface="0">
+		<TCA9548 addr="0xE0" __link__="13" />
+		<TCA9548_PARALLEL __taker__="13">
+		<TCA9548_BUS chnl="0">
+			<NVME_TEMP slot="0">
+				<SENSOR name="NVMeG0_TEMP" no="0x34" scan="ON,1" sdr="NVME_TEMP" />
+			</NVME_TEMP>
+		</TCA9548_BUS>
+		<TCA9548_BUS chnl="1">
+			<NVME_TEMP slot="1">
+				<SENSOR name="NVMeG1_TEMP" no="0x35" scan="ON,1" sdr="NVME_TEMP" />
+			</NVME_TEMP>
+		</TCA9548_BUS>
+		<TCA9548_BUS chnl="2">
+			<NVME_TEMP slot="2">
+				<SENSOR name="NVMeG2_TEMP" no="0x36" scan="ON,1" sdr="NVME_TEMP" />
+			</NVME_TEMP>
+		</TCA9548_BUS>
+		<TCA9548_BUS chnl="3">
+			<NVME_TEMP slot="3">
+				<SENSOR name="NVMeG3_TEMP" no="0x37" scan="ON,1" sdr="NVME_TEMP" />
+			</NVME_TEMP>
+		</TCA9548_BUS>
+		</TCA9548_PARALLEL>
+	</I2C_SLAVE>
+	<I2C_SLAVE forward="8" interface="0">
+		<ADT7462 addr="0xB0">
+			<ADT7462_FAN chnl="0">
+				<SENSOR name="BPB_FAN_1A" no="0xA0" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="1">
+				<SENSOR name="BPB_FAN_1B" no="0xA1" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="2">
+				<SENSOR name="BPB_FAN_2A" no="0xA2" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="3">
+				<SENSOR name="BPB_FAN_2B" no="0xA3" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="4">
+				<SENSOR name="BPB_FAN_3A" no="0xA4" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="5">
+				<SENSOR name="BPB_FAN_3B" no="0xA5" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="6">
+				<SENSOR name="BPB_FAN_4A" no="0xA6" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="7">
+				<SENSOR name="BPB_FAN_4B" no="0xA7" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_PWM chnl="0">
+				<ACCESS_PT no="0x118" sdr="PWM" />
+			</ADT7462_PWM>
+			<ADT7462_PWM chnl="1">
+				<ACCESS_PT no="0x119" sdr="PWM" />
+			</ADT7462_PWM>
+			<ADT7462_PWM chnl="2">
+				<ACCESS_PT no="0x11A" sdr="PWM" />
+			</ADT7462_PWM>
+			<ADT7462_PWM chnl="3">
+				<ACCESS_PT no="0x11B" sdr="PWM" />
+			</ADT7462_PWM>
+		</ADT7462>
+		<ADT7462 addr="0xB8">
+			<ADT7462_FAN chnl="0">
+				<SENSOR name="BPB_FAN_5A" no="0xA8" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="1">
+				<SENSOR name="BPB_FAN_5B" no="0xA9" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="2">
+				<SENSOR name="BPB_FAN_6A" no="0xAA" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="3">
+				<SENSOR name="BPB_FAN_6B" no="0xAB" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="4">
+				<SENSOR name="BPB_FAN_7A" no="0xAC" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="5">
+				<SENSOR name="BPB_FAN_7B" no="0xAD" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="6">
+				<SENSOR name="BPB_FAN_8A" no="0xAE" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_FAN chnl="7">
+				<SENSOR name="BPB_FAN_8B" no="0xAF" scan="ON,2" sdr="BPB_FAN" />
+			</ADT7462_FAN>
+			<ADT7462_PWM chnl="0">
+				<ACCESS_PT no="0x11C" sdr="PWM" />
+			</ADT7462_PWM>
+			<ADT7462_PWM chnl="1">
+				<ACCESS_PT no="0x11D" sdr="PWM" />
+			</ADT7462_PWM>
+			<ADT7462_PWM chnl="2">
+				<ACCESS_PT no="0x11E" sdr="PWM" />
+			</ADT7462_PWM>
+			<ADT7462_PWM chnl="3">
+				<ACCESS_PT no="0x11F" sdr="PWM" />
+			</ADT7462_PWM>
+		</ADT7462>
+	</I2C_SLAVE>
+	</I2C_BONDING>
+	<SGPIO order="0" shift="1" swap="1">
+		<CPLD cksum="1" debug="0" scanning="1">
+			<CHAIN_CPLD_REV chnl="0">
+				<ACCESS_PT no="0x190" scan="ON,2" sdr="CHAIN_CPLD_REV" />
+			</CHAIN_CPLD_REV>
+			<CHAIN_CPLD_STATUS>
+				<ACCESS_PT no="0x191" scan="ON,2" sdr="CHAIN_CPLD_STATUS" />
+			</CHAIN_CPLD_STATUS>
+			<CHAIN_CPLD_INFO>
+				<ACCESS_PT no="0x1A0" scan="ON,5" sdr="CHAIN_CPLD_INFO" />
+			</CHAIN_CPLD_INFO>
+		</CPLD>
+	</SGPIO>
+</AST2600>
