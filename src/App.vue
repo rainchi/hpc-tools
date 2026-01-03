@@ -1081,6 +1081,12 @@ watch([mpi, compile, nvprof, nsys, ncu, rocprof, hipcc, slurm, slurmAdv, slurmAr
             <button @click="deleteServer" class="danger">刪除</button>
           </div>
         </div>
+        <div class="github-link-container">
+          <a href="https://github.com/rainchi/hpc-tools" target="_blank" rel="noopener noreferrer" class="github-link">
+            <span class="icon">GitHub</span>
+            <span class="text">rainchi/hpc-tools</span>
+          </a>
+        </div>
       </div>
     </aside>
 
@@ -2446,6 +2452,33 @@ hr {
   margin-top: auto;
   padding-top: 16px;
   border-top: 1px solid #30363d;
+}
+
+.github-link-container {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #21262d;
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8b949e;
+  text-decoration: none;
+  font-size: 0.8rem;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.github-link:hover {
+  background: #21262d;
+  color: #58a6ff;
+}
+
+.github-link .icon {
+  font-weight: bold;
 }
 
 .server-switcher label {
