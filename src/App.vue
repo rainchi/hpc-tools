@@ -148,6 +148,28 @@ const handleFioSendToSlurm = (cmd) => {
   showToast('已將 FIO 指令填入 Slurm 腳本');
 };
 
+const copyHelloCode = () => {
+  const code = `cat <<EOF > mpi_hello.c
+#include <mpi.h>
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    MPI_Init(NULL, NULL);
+    int world_size, world_rank, name_len;
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Get_processor_name(processor_name, &name_len);
+    printf("Hello world from processor %s, rank %d out of %d processors\\n", processor_name, world_rank, world_size);
+    MPI_Finalize();
+    return 0;
+}
+EOF`;
+  navigator.clipboard.writeText(code).then(() => {
+    showToast('已複製建立指令！請在終端機貼上執行。');
+  });
+};
+
 const transfer = reactive({
   src: './data/',
   dst: 'user@server:/path/',
@@ -1032,6 +1054,14 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
 
       <!-- MPI Runner -->
       <div v-if="mode === 'mpi'">
+        <div class="quick-start-banner">
+          <div class="banner-content">
+            <span class="icon">💡</span>
+            <span>還沒有測試程式？快速建立一個 MPI Hello World</span>
+          </div>
+          <button class="copy-btn small" @click="copyHelloCode">複製建立指令</button>
+        </div>
+
         <div class="form-group">
           <label>MPI 實作版本 (Implementation)</label>
           <CustomSelect 
@@ -1859,6 +1889,25 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
   overflow: hidden;
 }
 
+.quick-start-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(56, 139, 253, 0.1);
+  border: 1px solid rgba(56, 139, 253, 0.3);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #58a6ff;
+}
+
 .toggle-btn {
   background: transparent;
   color: #8b949e;
@@ -2139,6 +2188,11 @@ hr {
   gap: 6px;
   transition: all 0.2s;
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+.copy-btn.small {
+  padding: 4px 10px;
+  font-size: 0.75rem;
 }
 
 .copy-btn:hover {
