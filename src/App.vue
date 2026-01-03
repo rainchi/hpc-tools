@@ -11,6 +11,7 @@ import OsuBenchmarkBuilder from './components/OsuBenchmarkBuilder.vue';
 import StreamBenchmarkBuilder from './components/StreamBenchmarkBuilder.vue';
 import FioBenchmarkBuilder from './components/FioBenchmarkBuilder.vue';
 import PbsToSlurmConverter from './components/PbsToSlurmConverter.vue';
+import GigabyteFanProfileBuilder from './components/GigabyteFanProfileBuilder.vue';
 import CustomSelect from './components/CustomSelect.vue';
 import Combobox from './components/Combobox.vue';
 
@@ -467,6 +468,7 @@ const modes = [
   { key: 'osu', label: 'OSU Benchmark' },
   { key: 'fio', label: 'FIO Disk I/O Benchmark' },
   { key: 'modules', label: 'Environment Modules' },
+  { key: 'gigabyte-fan', label: 'Gigabyte Fan Profile' },
 ];
 
 const filteredModes = computed(() => {
@@ -1837,6 +1839,11 @@ watch([mpi, compile, nvprof, nsys, ncu, rocprof, hipcc, slurm, slurmAdv, slurmAr
       <!-- PBS to Slurm Converter -->
       <div v-if="mode === 'pbs-to-slurm'">
         <PbsToSlurmConverter />
+      </div>
+
+      <!-- Gigabyte Fan Profile -->
+      <div v-if="mode === 'gigabyte-fan'">
+        <GigabyteFanProfileBuilder />
       </div>
 
       <!-- Apptainer / Singularity -->
