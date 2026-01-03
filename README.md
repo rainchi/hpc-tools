@@ -16,9 +16,16 @@ HPC Tools is a web-based command generator designed specifically for High-Perfor
 - **System Info Viewer**: Parses and visualizes HPC node hardware topology (lstopo), CPU, memory, and GPU information.
 - **Container Support (Apptainer / Singularity)**:
   - Command Generator: Quickly generate `exec`, `run`, and `shell` commands.
-  - **Apptainer Builder**: Interactive generator for Apptainer definition files (.def).
+  - **Apptainer Builder**: Interactive generator for Apptainer definition files (.def) with section validation and descriptions.
+- **HPL Config Builder**: 
+  - Calculate optimal $N$, $NB$, and $P \times Q$ parameters based on system memory.
+  - Smart $P \times Q$ suggestions with prime number detection and nearby factorization alternatives.
+- **OSU Micro-Benchmarks**: Interactively select and generate OSU benchmark commands (Point-to-Point, Collective, One-Sided).
 - **Environment Modules**: Interactively select and generate `module load` commands.
 - **Data Transfer**: Supports `rsync` and `scp` command generation.
+- **Server Management**: 
+  - Manage multiple server configurations independently.
+  - Export/Import configurations with server names and conflict detection.
 
 ## Tech Stack
 
@@ -55,9 +62,15 @@ npm run preview
 ## Project Structure
 
 - `src/App.vue`: Main application logic and UI layout.
-- `src/utils/builders.js`: Core command generation logic.
+- `src/utils/`:
+  - `builders.js`: Core command generation logic.
+  - `hpl.js`: HPL parameter calculation and $P \times Q$ optimization logic.
+  - `osu.js`: OSU benchmark categories and command logic.
 - `src/components/`: Vue components for various features.
   - `SystemInfoViewer.vue`: System information parsing and display.
   - `ApptainerBuilder.vue`: Container definition file generator.
+  - `HplConfigBuilder.vue`: HPL configuration helper with smart suggestions.
+  - `OsuBenchmarkBuilder.vue`: OSU benchmark command generator.
   - `CpuBinding.vue`: MPI core binding helper tool.
+  - `CustomSelect.vue`: Custom dropdown component for better dark mode support.
 
