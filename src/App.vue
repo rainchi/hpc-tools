@@ -1749,6 +1749,10 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
   flex-direction: column;
   transition: width 0.2s ease, padding 0.2s ease;
   z-index: 10;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  box-sizing: border-box;
 }
 
 .sidebar.collapsed {
@@ -1818,6 +1822,21 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
+  margin-right: -8px;
+  padding-right: 8px;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: #30363d;
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background-color: #484f58;
 }
 
 .sidebar-nav ul {
