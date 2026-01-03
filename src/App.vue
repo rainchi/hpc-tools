@@ -69,7 +69,7 @@ const ncu = reactive({
 
 const slurm = reactive({
   jobName: 'myjob',
-  partition: 'gpu',
+  partition: '',
   account: '',
   time: '01:00:00',
   nodes: 1,
