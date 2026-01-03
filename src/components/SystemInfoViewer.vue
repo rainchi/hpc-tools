@@ -582,6 +582,18 @@ export LD_LIBRARY_PATH=$HOME/local/hwloc/lib:$LD_LIBRARY_PATH</pre>
   gap: 2px;
   margin-bottom: 16px;
   border-bottom: 1px solid #30363d;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 2px;
 }
 
 .tabs button {

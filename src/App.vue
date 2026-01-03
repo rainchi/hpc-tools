@@ -372,6 +372,7 @@ const showSrunPreview = ref(false);
 
 // Sidebar state and search
 const sidebarCollapsed = ref(false);
+const mobileMenuOpen = ref(false);
 const searchQuery = ref('');
 
 // Toast state
@@ -961,6 +962,10 @@ if (hash.startsWith('#share=')) {
   }
 }
 
+watch(mode, () => {
+  mobileMenuOpen.value = false;
+});
+
 watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem, osu], () => {
   saveCurrentServerData();
 }, { deep: true });
@@ -968,6 +973,14 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
 
 <template>
   <div class="app-shell">
+    <header class="mobile-header">
+      <button class="menu-toggle" @click="mobileMenuOpen = !mobileMenuOpen">
+        <span class="hamburger"></span>
+      </button>
+      <span class="mobile-brand">🚀 HPC Tools</span>
+      <div class="mobile-mode-label">{{ currentModeLabel }}</div>
+    </header>
+
     <transition name="toast">
       <div v-if="toast.show" :class="['toast', toast.type]">
         {{ toast.message }}
@@ -1002,7 +1015,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
       </div>
     </transition>
 
-    <aside :class="['sidebar', { collapsed: sidebarCollapsed }]">
+    <aside :class="['sidebar', { collapsed: sidebarCollapsed, 'mobile-open': mobileMenuOpen }]">
       <div class="sidebar-header">
         <span class="brand">🚀 HPC Tools</span>
         <button class="toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed">{{ sidebarCollapsed ? '➤' : '◀' }}</button>
@@ -1046,6 +1059,8 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         </div>
       </div>
     </aside>
+
+    <div class="sidebar-overlay" v-if="mobileMenuOpen" @click="mobileMenuOpen = false"></div>
 
     <main class="content">
       <header class="page-title"><h1>{{ currentModeLabel }}</h1></header>
@@ -1841,6 +1856,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #0d0e10;
   color: #e6e9ef;
+  overflow-x: hidden;
 }
 
 .app-shell {
@@ -2564,5 +2580,150 @@ hr {
   color: #f85149;
   border-color: #f85149;
   background: #f8514911;
+}
+
+/* Mobile Header */
+.mobile-header {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    display: block;
+  }
+
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: 56px;
+    background: #15171b;
+    border-bottom: 1px solid #23262d;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 12px;
+  }
+
+  .menu-toggle {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hamburger, .hamburger::before, .hamburger::after {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: #fff;
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .hamburger::before { top: -6px; }
+  .hamburger::after { top: 4px; }
+
+  .mobile-brand {
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  .mobile-mode-label {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: #8b949e;
+    background: #21262d;
+    padding: 4px 8px;
+    border-radius: 4px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    bottom: 0;
+    width: 280px !important;
+    z-index: 200;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100vh;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  }
+
+  .sidebar.mobile-open {
+    left: 0;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(2px);
+    z-index: 150;
+  }
+
+  .content {
+    padding: 16px !important;
+  }
+
+  .page-title {
+    display: none; /* Hidden on mobile because it's in the header */
+  }
+
+  /* Component specific responsive fixes */
+  .inline {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .config-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .result-box {
+    padding: 12px !important;
+  }
+
+  .quick-start-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .quick-start-banner .copy-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<style>
+/* Global responsive utilities */
+@media (max-width: 768px) {
+  .inline {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  .config-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-group {
+    width: 100% !important;
+  }
 }
 </style>

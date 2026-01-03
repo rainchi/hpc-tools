@@ -258,6 +258,16 @@ const handleTab = (e) => {
     gap: 20px;
     height: 100%;
 }
+
+@media (max-width: 768px) {
+    .columns {
+        flex-direction: column;
+        height: auto;
+    }
+    .column {
+        height: 400px; /* Give some height to the editor and list on mobile */
+    }
+}
 .column {
     flex: 1;
     display: flex;
