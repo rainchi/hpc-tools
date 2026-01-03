@@ -267,3 +267,36 @@ export const suggestN = (memoryGB, ratio = 0.8) => {
   // Round to multiple of 128 or 256 for better performance
   return Math.floor(n / 128) * 128;
 };
+
+export const suggestPQ = (totalProcesses) => {
+  // Find P and Q such that P * Q = totalProcesses and P is as close to Q as possible, with P <= Q
+  let p = Math.floor(Math.sqrt(totalProcesses));
+  while (p > 0) {
+    if (totalProcesses % p === 0) {
+      return { p, q: totalProcesses / p };
+    }
+    p--;
+  }
+  return { p: 1, q: totalProcesses };
+};
+
+export const getNearbySuggestions = (totalProcesses) => {
+  const suggestions = [];
+  // Check range of +/- 5
+  for (let n = Math.max(1, totalProcesses - 5); n <= totalProcesses + 5; n++) {
+    if (n === totalProcesses) continue;
+    const { p, q } = suggestPQ(n);
+    // A "good" suggestion is one where P is not 1 (unless n is very small)
+    if (p > 1 || n <= 3) {
+      suggestions.push({ n, p, q, ratio: p / q });
+    }
+  }
+  // Sort by ratio (closer to 1 is better) and then by proximity to totalProcesses
+  return suggestions.sort((a, b) => {
+    const ratioDiff = Math.abs(1 - b.ratio) - Math.abs(1 - a.ratio);
+    if (Math.abs(ratioDiff) < 0.01) {
+      return Math.abs(a.n - totalProcesses) - Math.abs(b.n - totalProcesses);
+    }
+    return b.ratio - a.ratio;
+  }).slice(0, 3);
+};

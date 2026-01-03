@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
-import { HPL_PARAMETERS, parseHplDat, generateHplDat, suggestN } from '../utils/hpl';
+import { ref, watch, onMounted, computed } from 'vue';
+import { HPL_PARAMETERS, parseHplDat, generateHplDat, suggestN, suggestPQ, getNearbySuggestions } from '../utils/hpl';
 
 const props = defineProps({
   config: {
@@ -15,6 +15,24 @@ const props = defineProps({
 
 const hplText = ref('');
 const activeHelpParam = ref(null);
+const totalProcessesInput = ref(4);
+
+const suggestedPQ = computed(() => {
+  return suggestPQ(totalProcessesInput.value);
+});
+
+const nearbySuggestions = computed(() => {
+  if (totalProcessesInput.value > 3 && suggestedPQ.value.p === 1) {
+    return getNearbySuggestions(totalProcessesInput.value);
+  }
+  return [];
+});
+
+const handleSuggestPQ = (n, p, q) => {
+  if (n) totalProcessesInput.value = n;
+  props.config.ps = [p || suggestedPQ.value.p];
+  props.config.qs = [q || suggestedPQ.value.q];
+};
 
 const handleParse = () => {
   const parsed = parseHplDat(hplText.value);
@@ -114,6 +132,42 @@ const updateList = (key, value) => {
             建議 N: <strong>{{ suggestN(memSettings.memoryType === 'gpu' ? memSettings.memoryGB * memSettings.gpuCount : memSettings.memoryGB, memSettings.usageRatio) }}</strong> 
             (約佔用 {{ ((memSettings.memoryType === 'gpu' ? memSettings.memoryGB * memSettings.gpuCount : memSettings.memoryGB) * memSettings.usageRatio).toFixed(2) }} GB)
             <div v-if="memSettings.memoryType === 'gpu'" class="warning-text">* GPU 模式下請確保 N 是 NB 的倍數。</div>
+          </div>
+        </div>
+
+        <div class="memory-suggestion">
+          <label class="suggestion-label">P x Q 建議 (根據總行程數)</label>
+          <div class="inline" style="grid-template-columns: 1fr 1fr; gap: 8px; align-items: end;">
+            <div class="form-group">
+              <label>總 MPI 行程數 (Total Processes)</label>
+              <input v-model.number="totalProcessesInput" type="number" min="1" />
+            </div>
+            <div class="btn-row" style="margin-bottom: 0; position: static;">
+              <button class="action-btn suggest" @click="handleSuggestPQ" style="background: #1f6feb;">
+                <span class="icon">✨</span> 套用建議 P x Q
+              </button>
+            </div>
+          </div>
+          <div class="suggestion-result">
+            建議組合: <strong>P = {{ suggestedPQ.p }}, Q = {{ suggestedPQ.q }}</strong>
+            <span class="muted" style="margin-left: 8px;">(P x Q = {{ suggestedPQ.p * suggestedPQ.q }})</span>
+            
+            <div v-if="nearbySuggestions.length > 0" class="nearby-warning">
+              <div class="warning-header">⚠️ 注意：{{ totalProcessesInput }} 是質數或因數分解較差</div>
+              <div class="warning-body">
+                這會導致網格變成 1 x {{ totalProcessesInput }}，通常效能不佳。建議改用：
+                <div class="suggestion-chips">
+                  <button 
+                    v-for="s in nearbySuggestions" 
+                    :key="s.n" 
+                    class="chip-btn"
+                    @click="handleSuggestPQ(s.n, s.p, s.q)"
+                  >
+                    {{ s.n }} ({{ s.p }}x{{ s.q }})
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -252,6 +306,48 @@ const updateList = (key, value) => {
   font-size: 0.75rem;
   margin-top: 4px;
   display: block;
+}
+
+.nearby-warning {
+  margin-top: 10px;
+  padding: 8px;
+  background: rgba(210, 153, 34, 0.1);
+  border: 1px solid rgba(210, 153, 34, 0.3);
+  border-radius: 6px;
+}
+
+.warning-header {
+  color: #d29922;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.warning-body {
+  font-size: 0.75rem;
+  color: #c9d1d9;
+}
+
+.suggestion-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.chip-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #58a6ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chip-btn:hover {
+  background: #30363d;
+  border-color: #58a6ff;
 }
 
 .params-grid {
