@@ -43,6 +43,38 @@ export function parseGigabyteXml(xmlString) {
   return { sensors, fans };
 }
 
+/**
+ * Parses the full XML tree for topology viewing
+ * @param {string} xmlString 
+ */
+export function parseGigabyteTopo(xmlString) {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+  const root = xmlDoc.documentElement;
+
+  function processNode(node) {
+    const children = [];
+    node.childNodes.forEach(child => {
+      if (child.nodeType === 1) { // Element node
+        children.push(processNode(child));
+      }
+    });
+
+    const attrs = {};
+    for (let i = 0; i < node.attributes.length; i++) {
+      attrs[node.attributes[i].name] = node.attributes[i].value;
+    }
+
+    return {
+      name: node.nodeName,
+      attributes: attrs,
+      children: children.length > 0 ? children : null
+    };
+  }
+
+  return processNode(root);
+}
+
 export async function fetchModelList() {
   try {
     const response = await fetch('/gigabyte_models/models.json');

@@ -1,6 +1,103 @@
 <script setup>
-import { ref, reactive, watch, computed, onMounted } from 'vue';
-import { parseGigabyteXml, fetchModelList, fetchModelXml } from '../utils/gigabyte_xml';
+import { ref, reactive, watch, computed, onMounted, defineComponent, h } from 'vue';
+import { parseGigabyteXml, parseGigabyteTopo, fetchModelList, fetchModelXml } from '../utils/gigabyte_xml';
+
+// Recursive component for Topo Tree (Block Diagram Style)
+const TopoNode = defineComponent({
+  name: 'TopoNode',
+  props: ['node', 'depth', 'searchQuery'],
+  setup(props) {
+    const isOpen = ref((props.depth || 0) < 2);
+    const hasChildren = computed(() => props.node.children && props.node.children.length > 0);
+    
+    const matchesSearch = computed(() => {
+      if (!props.searchQuery) return true;
+      const q = props.searchQuery.toLowerCase();
+      const nameMatch = props.node.name.toLowerCase().includes(q);
+      const attrMatch = Object.values(props.node.attributes || {}).some(v => String(v).toLowerCase().includes(q));
+      const childrenMatch = props.node.children?.some(c => {
+        const check = (n) => {
+          if (n.name.toLowerCase().includes(q)) return true;
+          if (Object.values(n.attributes || {}).some(v => String(v).toLowerCase().includes(q))) return true;
+          return n.children?.some(check);
+        };
+        return check(c);
+      });
+      return nameMatch || attrMatch || childrenMatch;
+    });
+
+    const getIcon = (name) => {
+      const n = name.toUpperCase();
+      if (n.includes('SENSOR')) return '🌡️';
+      if (n.includes('FAN')) return '🌬️';
+      if (n.includes('I2C')) return '🔌';
+      if (n.includes('GPU')) return '🎮';
+      if (n.includes('CPU')) return '🧠';
+      if (n.includes('DIMM')) return '💾';
+      if (n.includes('PCA')) return '🔀';
+      if (n.includes('BUS')) return '🚌';
+      if (n.includes('TEMP')) return '🔥';
+      return '📦';
+    };
+
+    const getNodeClass = (name) => {
+      const n = name.toUpperCase();
+      if (n.includes('I2C') || n.includes('BUS')) return 'node-bus';
+      if (n.includes('SENSOR') || n.includes('TEMP')) return 'node-sensor';
+      if (n.includes('FAN')) return 'node-fan';
+      if (n.includes('GPU') || n.includes('CPU')) return 'node-compute';
+      return 'node-default';
+    };
+
+    const highlightText = (text, query) => {
+      if (!query) return text;
+      const parts = text.split(new RegExp(`(${query})`, 'gi'));
+      return parts.map(part => 
+        part.toLowerCase() === query.toLowerCase() 
+          ? h('span', { class: 'search-highlight' }, part) 
+          : part
+      );
+    };
+
+    return () => {
+      if (!matchesSearch.value) return null;
+
+      return h('div', { 
+        class: ['topo-block', getNodeClass(props.node.name), { 'is-open': isOpen.value, 'has-children': hasChildren.value }],
+      }, [
+        h('div', { 
+          class: 'topo-header', 
+          onClick: (e) => { e.stopPropagation(); isOpen.value = !isOpen.value; } 
+        }, [
+          h('div', { class: 'topo-header-main' }, [
+            h('span', { class: 'topo-icon' }, getIcon(props.node.name)),
+            h('span', { class: 'topo-name' }, highlightText(props.node.name, props.searchQuery)),
+            hasChildren.value ? h('span', { class: 'topo-count' }, props.node.children.length) : null,
+          ]),
+          h('div', { class: 'topo-attrs' }, 
+            Object.entries(props.node.attributes || {}).map(([key, val]) => 
+              h('span', { class: 'topo-attr-pill', key }, [
+                h('span', { class: 'topo-attr-k' }, key),
+                h('span', { class: 'topo-attr-v' }, highlightText(String(val), props.searchQuery))
+              ])
+            )
+          ),
+          hasChildren.value ? h('span', { class: 'topo-toggle' }, isOpen.value ? '−' : '+') : null
+        ]),
+        (isOpen.value && hasChildren.value) ? h('div', { class: 'topo-children' }, 
+          props.node.children.map((child, idx) => 
+            h(TopoNode, { 
+              key: idx, 
+              node: child, 
+              depth: (props.depth || 0) + 1,
+              searchQuery: props.searchQuery
+            })
+          )
+        ) : null
+      ]);
+    };
+  }
+});
 
 const defaultJson = {"strVersion":"1.00","arrProfile":[{"strVersion":"1.00","strName":"default","arrPolicy":[{"arrRef":[55,88],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[30,100],"iCpuTdp":0,"iInitDuty":30,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[1,2],"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[50,80],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[25,100],"iCpuTdp":0,"iInitDuty":25,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[4,5],"arrFanSensor":[160,161,166,167],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[50,80],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[25,100],"iCpuTdp":0,"iInitDuty":25,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[6,7],"arrFanSensor":[168,169,174,175],"iHysteresis":0,"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[50,68],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[25,100],"iCpuTdp":0,"iInitDuty":25,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[28,29,30],"arrFanSensor":[162,163,164,165,166,167,168,169,170,171,172,173],"iHysteresis":0,"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[55,66],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[30,100],"iCpuTdp":0,"iInitDuty":30,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[56,57],"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrDuty":[30,100],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrRef":[55,85],"iCpuTdp":0,"iInitDuty":30,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[36,39],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"arrDuty":[30,100],"iSensorCode":1,"iInSDR":1,"arrRef":[50,85],"arrHexDeviceID":[],"iCpuTdp":0,"iInitDuty":30,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[32,33],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"arrDuty":[30,100],"iSensorCode":1,"iInSDR":1,"arrRef":[60,88],"arrHexDeviceID":[],"iCpuTdp":0,"iInitDuty":30,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[48,49],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"iPCIEDeviceEnable":0,"arrRef":[50,85],"iSensorCode":1,"iInSDR":1,"arrDuty":[30,100],"iCpuTdp":0,"iInitDuty":30,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[14,15,76,78,79],"arrFanSensor":[160,161,162,163,164,165,166,167],"iHysteresis":0,"iPolicyType":2,"arrHexDeviceID":[],"iAmbientSensor":0},{"iPolicyType":2,"iInSDR":1,"iSensorCode":1,"iInitDuty":30,"iCpuTdp":0,"iAmbientSensor":0,"iAmbientSensorTemp":0,"arrSensor":[16,17,72,74,86],"arrFanSensor":[168,169,170,171,172,173,174,175],"arrRef":[50,85],"arrDuty":[30,100],"arrHexVendorID":[],"arrHexDeviceID":[],"iPCIEDeviceEnable":0,"iHysteresis":0}]},{"strVersion":"1.00","strName":"SPECpower","arrPolicy":[{"arrRef":[60,88],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[15,100],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[1,2],"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[50,80],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[15,100],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[4,5],"arrFanSensor":[160,161,166,167],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[50,80],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[15,100],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[6,7],"arrFanSensor":[168,169,174,175],"iHysteresis":0,"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[50,68],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[15,100],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[28,29,30],"arrFanSensor":[162,163,164,165,166,167,168,169,170,171,172,173],"iHysteresis":0,"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[55,66],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[15,100],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[56,57],"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrDuty":[15,100],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrRef":[55,85],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[36,39],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"arrDuty":[15,100],"iSensorCode":1,"iInSDR":1,"arrRef":[50,85],"arrHexDeviceID":[],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[32,33],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"arrDuty":[15,100],"iSensorCode":1,"iInSDR":1,"arrRef":[60,88],"arrHexDeviceID":[],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[48,49],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"iPCIEDeviceEnable":0,"arrRef":[50,85],"iSensorCode":1,"iInSDR":1,"arrDuty":[15,100],"iCpuTdp":0,"iInitDuty":15,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[14,15,76,78,79],"arrFanSensor":[160,161,162,163,164,165,166,167],"iHysteresis":0,"iPolicyType":2,"arrHexDeviceID":[],"iAmbientSensor":0},{"iPolicyType":2,"iInSDR":1,"iSensorCode":1,"iInitDuty":15,"iCpuTdp":0,"iAmbientSensor":0,"iAmbientSensorTemp":0,"arrSensor":[16,17,72,74,86],"arrFanSensor":[168,169,170,171,172,173,174,175],"arrRef":[55,85],"arrDuty":[15,100],"arrHexVendorID":[],"arrHexDeviceID":[],"iPCIEDeviceEnable":0,"iHysteresis":0}]},{"strVersion":"1.00","strName":"isc","arrPolicy":[{"arrRef":[75,88],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[10,100],"iCpuTdp":0,"iInitDuty":10,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[1,2],"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[60,80],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[10,100],"iCpuTdp":0,"iInitDuty":10,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[4,5],"arrFanSensor":[160,161,166,167],"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrRef":[60,80],"iSensorCode":1,"arrHexDeviceID":[],"iInSDR":1,"arrDuty":[10,100],"iCpuTdp":0,"iInitDuty":10,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[6,7],"arrFanSensor":[168,169,174,175],"iHysteresis":0,"iPolicyType":2,"iPCIEDeviceEnable":0,"iAmbientSensor":0},{"arrDuty":[10,25,100],"iSensorCode":1,"iInSDR":1,"arrRef":[75,83,85],"arrHexDeviceID":[],"iCpuTdp":0,"iInitDuty":10,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[32,33],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"arrDuty":[10,100],"iSensorCode":1,"iInSDR":1,"arrRef":[60,88],"arrHexDeviceID":[],"iCpuTdp":0,"iInitDuty":10,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[48,49],"iPCIEDeviceEnable":0,"iHysteresis":0,"iPolicyType":2,"arrFanSensor":[160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175],"iAmbientSensor":0},{"iPCIEDeviceEnable":0,"arrRef":[60,85],"iSensorCode":1,"iInSDR":1,"arrDuty":[10,100],"iCpuTdp":0,"iInitDuty":10,"arrHexVendorID":[],"iAmbientSensorTemp":0,"arrSensor":[14,15,76,78,79],"arrFanSensor":[160,161,162,163,164,165,166,167],"iHysteresis":0,"iPolicyType":2,"arrHexDeviceID":[],"iAmbientSensor":0},{"iPolicyType":2,"iInSDR":1,"iSensorCode":1,"iInitDuty":10,"iCpuTdp":0,"iAmbientSensor":0,"iAmbientSensorTemp":0,"arrSensor":[16,17,72,74,86],"arrFanSensor":[168,169,170,171,172,173,174,175],"arrRef":[60,85],"arrDuty":[10,100],"arrHexVendorID":[],"arrHexDeviceID":[],"iPCIEDeviceEnable":0,"iHysteresis":0}]}],"strMode":"isc"};
 
@@ -13,6 +110,8 @@ const models = ref([]);
 const selectedModel = ref(null);
 const currentHardwareModel = ref("未選擇型號");
 const hardwareMap = reactive({ sensors: {}, fans: {} });
+const topoData = ref(null);
+const activeMainTab = ref('editor'); // 'editor' or 'topo'
 
 onMounted(async () => {
   models.value = await fetchModelList();
@@ -28,6 +127,7 @@ watch(selectedModel, async (newModel) => {
       const result = parseGigabyteXml(xml);
       hardwareMap.sensors = result.sensors;
       hardwareMap.fans = result.fans;
+      topoData.value = parseGigabyteTopo(xml);
       currentHardwareModel.value = newModel.name;
     }
   }
@@ -42,9 +142,11 @@ const importXml = (event) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const result = parseGigabyteXml(e.target.result);
+      const xml = e.target.result;
+      const result = parseGigabyteXml(xml);
       hardwareMap.sensors = result.sensors;
       hardwareMap.fans = result.fans;
+      topoData.value = parseGigabyteTopo(xml);
       currentHardwareModel.value = "Custom (Imported)";
       selectedModel.value = null;
       alert('XML 解析成功！已更新感測器與風扇對照表。');
@@ -59,12 +161,24 @@ const triggerXmlInput = () => {
   document.getElementById('xml-import-input').click();
 };
 
+const refreshTopo = async () => {
+  if (selectedModel.value) {
+    const xml = await fetchModelXml(selectedModel.value.file);
+    if (xml) {
+      topoData.value = parseGigabyteTopo(xml);
+    }
+  } else {
+    alert('請先選擇一個型號或匯入 XML');
+  }
+};
+
 const activeProfile = computed(() => fanProfile.arrProfile[activeProfileIndex.value]);
 const isDefaultProfile = computed(() => activeProfile.value?.strName === 'default');
 
 // UI State
 const sensorSearch = ref('');
 const fanSearch = ref('');
+const topoSearch = ref('');
 
 const filteredSensors = computed(() => {
   const allSensors = Object.keys(hardwareMap.sensors).map(Number);
@@ -350,8 +464,24 @@ const toggleIdInArray = (arr, id) => {
       <span>Gigabyte 伺服器風扇策略編輯器。您可以調整不同 Profile 下的溫度與轉速對應關係。</span>
     </div>
 
+    <!-- Main Tabs -->
+    <div class="main-tabs">
+      <button 
+        :class="['main-tab-btn', { active: activeMainTab === 'editor' }]"
+        @click="activeMainTab = 'editor'"
+      >
+        🎨 策略編輯器
+      </button>
+      <button 
+        :class="['main-tab-btn', { active: activeMainTab === 'topo' }]"
+        @click="activeMainTab = 'topo'"
+      >
+        🌿 硬體拓樸檢視
+      </button>
+    </div>
+
     <!-- Top Management Section -->
-    <div class="management-section">
+    <div v-if="activeMainTab === 'editor'" class="management-section">
       <div class="mgmt-card">
         <div class="mgmt-group">
           <div class="mgmt-header">
@@ -389,7 +519,40 @@ const toggleIdInArray = (arr, id) => {
       </div>
     </div>
 
-    <div class="config-section">
+    <!-- Topo Viewer Section -->
+    <div v-if="activeMainTab === 'topo'" class="topo-section">
+      <div class="section-header">
+        <div class="title-group">
+          <span class="section-title">🖥️ 硬體架構圖 (Hardware Topology)</span>
+          <span class="model-tag">{{ currentHardwareModel }}</span>
+        </div>
+        <div class="actions">
+          <div class="search-wrapper">
+            <input 
+              type="text" 
+              v-model="topoSearch" 
+              placeholder="搜尋元件或屬性..." 
+              class="search-input"
+            />
+            <span v-if="topoSearch" class="search-clear" @click="topoSearch = ''">×</span>
+          </div>
+          <button class="btn-secondary" @click="refreshTopo">🔄 重新整理</button>
+          <button class="btn-secondary" @click="triggerXmlInput">📥 更換 XML</button>
+        </div>
+      </div>
+
+      <div class="topo-container">
+        <div v-if="topoData" class="topo-graph-view">
+          <TopoNode :node="topoData" :searchQuery="topoSearch" />
+        </div>
+        <div v-else class="empty-state">
+          <div class="loading-spinner"></div>
+          <span>載入中或無資料...</span>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="activeMainTab === 'editor'" class="config-section">
       <div class="section-header">
         <div class="title-group">
           <span class="section-title">📋 Profile 管理</span>
@@ -705,6 +868,119 @@ const toggleIdInArray = (arr, id) => {
   align-items: center;
   gap: 10px;
   font-size: 0.9rem;
+}
+
+/* Main Tabs */
+.main-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.main-tab-btn {
+  padding: 10px 20px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.main-tab-btn:hover {
+  background: #21262d;
+  color: #e6edf3;
+}
+
+.main-tab-btn.active {
+  background: #1f6feb;
+  color: white;
+  border-color: #388bfd;
+}
+
+/* Topo Section */
+.topo-section {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.topo-container {
+  background: #010409;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 15px;
+  flex: 1;
+  overflow: auto;
+}
+
+.topo-graph-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #8b949e;
+  font-style: italic;
+}
+
+.search-input {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.search-input:focus {
+  border-color: #58a6ff;
+  outline: none;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  cursor: pointer;
+  color: #8b949e;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.search-clear:hover {
+  color: #e6edf3;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(88, 166, 255, 0.1);
+  border-top-color: #58a6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Management Section */
@@ -1434,4 +1710,134 @@ const toggleIdInArray = (arr, id) => {
   font-size: 0.75rem;
   color: #8b949e;
 }
+</style>
+
+<style>
+/* Global styles for recursive TopoNode component */
+.topo-block {
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #161b22;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+  overflow: hidden;
+  display: block;
+}
+
+.topo-block.is-open {
+  border-color: #484f58;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.topo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 38px;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.topo-header:hover {
+  background: rgba(88, 166, 255, 0.08);
+}
+
+.topo-header-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topo-icon {
+  font-size: 1.1rem;
+}
+
+.topo-name {
+  font-weight: 600;
+  color: #e6edf3;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9rem;
+}
+
+.topo-count {
+  font-size: 0.7rem;
+  color: #8b949e;
+  background: #21262d;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid #30363d;
+}
+
+.topo-attrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.topo-attr-pill {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topo-attr-k {
+  color: #8b949e;
+}
+
+.topo-attr-v {
+  color: #7ee787;
+  font-weight: 500;
+}
+
+.search-highlight {
+  background: rgba(242, 199, 68, 0.4) !important;
+  color: #fff !important;
+  border-radius: 2px;
+  padding: 0 2px;
+  font-weight: bold;
+}
+
+.topo-toggle {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #21262d;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #8b949e;
+  flex-shrink: 0;
+}
+
+.topo-children {
+  padding: 10px 0 10px 20px;
+  margin-left: 12px;
+  border-left: 1px dashed #484f58;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Node Type Colors */
+.node-bus { border-left: 4px solid #1f6feb !important; }
+.node-sensor { border-left: 4px solid #f85149 !important; }
+.node-fan { border-left: 4px solid #238636 !important; }
+.node-compute { border-left: 4px solid #d29922 !important; }
+.node-default { border-left: 4px solid #484f58 !important; }
 </style>
