@@ -275,12 +275,24 @@ const draggingPoint = ref(null); // { pIdx, ptIdx }
 const startDrag = (pIdx, ptIdx) => {
   if (isDefaultProfile.value) return;
   draggingPoint.value = { pIdx, ptIdx };
+  
+  // Mouse events
   window.addEventListener('mousemove', onDrag);
   window.addEventListener('mouseup', stopDrag);
+  
+  // Touch events
+  window.addEventListener('touchmove', onDrag, { passive: false });
+  window.addEventListener('touchend', stopDrag);
 };
 
 const onDrag = (e) => {
   if (!draggingPoint.value) return;
+  
+  // Prevent scrolling on touch devices while dragging
+  if (e.type === 'touchmove') {
+    e.preventDefault();
+  }
+
   const { pIdx, ptIdx } = draggingPoint.value;
   const policy = activeProfile.value.arrPolicy[pIdx];
   
@@ -288,12 +300,21 @@ const onDrag = (e) => {
   if (!svg) return;
   
   const rect = svg.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  
+  // Get coordinates based on event type
+  let clientX, clientY;
+  if (e.type.startsWith('touch')) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
   
   // Map SVG coordinates (0-200, 0-100) to (0-100 temp, 0-100 duty)
-  // Temp: 0-100 -> 0-200px
-  // Duty: 0-100 -> 100-0px (inverted)
   let newTemp = Math.round((x / rect.width) * 100);
   let newDuty = Math.round(100 - (y / rect.height) * 100);
   
@@ -302,8 +323,6 @@ const onDrag = (e) => {
   
   policy.arrRef[ptIdx] = newTemp;
   policy.arrDuty[ptIdx] = newDuty;
-  
-  // Optional: Keep sorted while dragging or sort on stop
 };
 
 const stopDrag = () => {
@@ -311,8 +330,11 @@ const stopDrag = () => {
     sortPolicyPoints(activeProfile.value.arrPolicy[draggingPoint.value.pIdx]);
   }
   draggingPoint.value = null;
+  
   window.removeEventListener('mousemove', onDrag);
   window.removeEventListener('mouseup', stopDrag);
+  window.removeEventListener('touchmove', onDrag);
+  window.removeEventListener('touchend', stopDrag);
 };
 
 const getSvgPath = (policy) => {
@@ -653,6 +675,7 @@ const toggleIdInArray = (arr, id) => {
                       r="4" 
                       :class="['chart-point', { active: draggingPoint?.pIdx === pIdx && draggingPoint?.ptIdx === ptIdx }]"
                       @mousedown="startDrag(pIdx, ptIdx)"
+                      @touchstart.prevent="startDrag(pIdx, ptIdx)"
                       @contextmenu.prevent="removePoint(policy, ptIdx)"
                     >
                       <title>溫度: {{ ref }}°C, 轉速: {{ policy.arrDuty[ptIdx] }}% (右鍵刪除)</title>
@@ -1378,6 +1401,7 @@ const toggleIdInArray = (arr, id) => {
   height: 120px;
   background: #0d1117;
   cursor: crosshair;
+  touch-action: none;
 }
 
 .fan-chart.readonly {
