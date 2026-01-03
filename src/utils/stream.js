@@ -20,7 +20,8 @@ export const STREAM_DEFAULTS = {
 export function buildStreamCompileCmd(config) {
   const { arraySize, ntimes, offset, type, openmp, compiler, optimization, march } = config;
   
-  let cmd = `${compiler} ${optimization} ${march}`;
+  let cmd = `${compiler} ${optimization}`;
+  if (march) cmd += ` -march=${march}`;
   
   if (openmp) {
     cmd += ' -fopenmp';
