@@ -155,31 +155,34 @@ const downloadScript = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: bold;
+  font-weight: 600;
   font-size: 0.9rem;
-  color: var(--color-heading);
+  color: #8b949e;
+  padding: 4px 0;
 }
 
 textarea {
   flex: 1;
-  background: var(--color-background-soft);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 12px;
-  font-family: 'Fira Code', monospace;
-  font-size: 0.85rem;
+  background: #0d1117;
+  color: #e6e9ef;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9rem;
   resize: none;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 textarea:focus {
   outline: none;
-  border-color: #42b883;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
 }
 
 .readonly-output {
-  background: var(--color-background-mute);
+  background: #161b22;
+  color: #7ee787;
   cursor: default;
 }
 
@@ -189,19 +192,21 @@ textarea:focus {
 }
 
 button {
-  padding: 4px 12px;
-  background: var(--color-background-mute);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-text);
+  padding: 6px 12px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   transition: all 0.2s;
 }
 
 button:hover {
-  background: var(--color-border-hover);
-  border-color: #42b883;
+  background: #30363d;
+  border-color: #8b949e;
+  color: #fff;
 }
 
 .mapping-table {

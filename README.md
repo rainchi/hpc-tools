@@ -20,6 +20,9 @@ HPC Tools is a web-based command generator designed specifically for High-Perfor
 - **HPL Config Builder**: 
   - Calculate optimal $N$, $NB$, and $P \times Q$ parameters based on system memory.
   - Smart $P \times Q$ suggestions with prime number detection and nearby factorization alternatives.
+- **STREAM Benchmark**: 
+  - Generate compilation and execution commands for memory bandwidth testing.
+  - Automatically calculate memory usage based on array size.
 - **OSU Micro-Benchmarks**: Interactively select and generate OSU benchmark commands (Point-to-Point, Collective, One-Sided).
 - **Environment Modules**: Interactively select and generate `module load` commands.
 - **Data Transfer**: Supports `rsync` and `scp` command generation.

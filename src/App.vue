@@ -8,6 +8,7 @@ import SystemInfoViewer from './components/SystemInfoViewer.vue';
 import ApptainerBuilder from './components/ApptainerBuilder.vue';
 import HplConfigBuilder from './components/HplConfigBuilder.vue';
 import OsuBenchmarkBuilder from './components/OsuBenchmarkBuilder.vue';
+import StreamBenchmarkBuilder from './components/StreamBenchmarkBuilder.vue';
 import PbsToSlurmConverter from './components/PbsToSlurmConverter.vue';
 import CustomSelect from './components/CustomSelect.vue';
 import Combobox from './components/Combobox.vue';
@@ -132,6 +133,12 @@ const handleOsuSendToSlurm = (cmd) => {
   slurm.run = `mpirun -np ${slurm.nodes * slurm.ntasksPerNode} ${cmd}`;
   mode.value = 'slurm';
   showToast('已將 OSU 指令填入 Slurm 腳本');
+};
+
+const handleStreamSendToSlurm = (cmd) => {
+  slurm.run = cmd;
+  mode.value = 'slurm';
+  showToast('已將 STREAM 指令填入 Slurm 腳本');
 };
 
 const transfer = reactive({
@@ -406,6 +413,7 @@ const modes = [
   { key: 'apptainer', label: 'Apptainer / Singularity' },
   { key: 'apptainer-builder', label: 'Apptainer Builder' },
   { key: 'hpl', label: 'HPL Config Builder' },
+  { key: 'stream', label: 'STREAM Benchmark' },
   { key: 'osu', label: 'OSU Benchmark' },
   { key: 'modules', label: 'Environment Modules' },
 ];
@@ -1703,6 +1711,11 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <HplConfigBuilder :config="hpl" :mem-settings="hplMem" />
       </div>
 
+      <!-- STREAM Benchmark -->
+      <div v-if="mode === 'stream'">
+        <StreamBenchmarkBuilder @send-to-slurm="handleStreamSendToSlurm" />
+      </div>
+
       <!-- OSU Benchmark -->
       <div v-if="mode === 'osu'">
         <OsuBenchmarkBuilder 
@@ -1716,7 +1729,9 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <div class="code-block">
           <div class="code-header">
             <span>產生腳本 (Write Script)</span>
-            <button class="copy-btn" @click="onCopyGenerate($event)">複製</button>
+            <button class="copy-btn" @click="onCopyGenerate($event)">
+              <span class="icon">📋</span> 複製
+            </button>
           </div>
           <pre>{{ generateWriteSlurmCmd }}</pre>
         </div>
@@ -1724,19 +1739,25 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <div class="code-block" style="margin-top: 16px;">
           <div class="code-header">
             <span>提交作業 (Submit Job)</span>
-            <button class="copy-btn" @click="onCopySbatch($event)">複製</button>
+            <button class="copy-btn" @click="onCopySbatch($event)">
+              <span class="icon">📋</span> 複製
+            </button>
           </div>
           <pre>$ sbatch {{ slurm.scriptName }}</pre>
         </div>
 
-        <div class="btn-row" style="position: static; margin-top: 16px;">
-          <button class="copy-btn" @click="tryDownloadSlurm">下載腳本檔案</button>
+        <div class="btn-row-bottom" style="margin-top: 16px; display: flex; justify-content: center;">
+          <button class="copy-btn primary" @click="tryDownloadSlurm">
+            <span class="icon">💾</span> 下載腳本檔案
+          </button>
         </div>
       </div>
 
-      <div class="result-box" v-else-if="mode !== 'apptainer-builder' && mode !== 'hpl' && mode !== 'osu'">
+      <div class="result-box" v-else-if="!['apptainer-builder', 'hpl', 'osu', 'stream', 'pbs-to-slurm'].includes(mode) && generatedCommand">
         <div class="btn-row">
-          <button class="copy-btn" @click="copyToClipboard">複製</button>
+          <button class="copy-btn" @click="copyToClipboard">
+            <span class="icon">📋</span> 複製指令
+          </button>
           
           <!-- Send to MPI -->
           <button v-if="['apptainer', 'nvprof', 'nsys', 'ncu', 'perf', 'valgrind', 'cuda-memcheck'].includes(mode)" 
@@ -2043,28 +2064,30 @@ hr {
   margin-top: 32px;
   background: #161b22;
   border: 1px solid #30363d;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 20px;
   position: relative;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   color: #7ee787;
-  line-height: 1.5;
+  line-height: 1.6;
   word-break: break-all;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .code-block {
   background: #0d1117;
   border: 1px solid #30363d;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0;
   overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .code-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 10px 16px;
   background: #161b22;
   border-bottom: 1px solid #30363d;
   color: #8b949e;
@@ -2074,16 +2097,17 @@ hr {
 
 .code-block pre {
   margin: 0;
-  padding: 12px;
+  padding: 16px;
   overflow-x: auto;
   color: #7ee787;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.95rem;
 }
 
 .btn-row {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 16px;
   display: flex;
   gap: 8px;
 }
@@ -2092,17 +2116,41 @@ hr {
   background: #21262d;
   border: 1px solid #30363d;
   color: #c9d1d9;
-  padding: 4px 12px;
+  padding: 6px 12px;
   border-radius: 6px;
   font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.2s;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .copy-btn:hover {
   background: #30363d;
   border-color: #8b949e;
   color: #fff;
+}
+
+.copy-btn:active {
+  background: #282e33;
+  transform: translateY(1px);
+}
+
+.copy-btn .icon {
+  font-size: 1rem;
+}
+
+.copy-btn.primary {
+  background: #238636;
+  border-color: rgba(240, 246, 252, 0.1);
+  color: #fff;
+}
+
+.copy-btn.primary:hover {
+  background: #2ea043;
 }
 
 .module-list-container {
