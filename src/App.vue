@@ -8,6 +8,7 @@ import SystemInfoViewer from './components/SystemInfoViewer.vue';
 import ApptainerBuilder from './components/ApptainerBuilder.vue';
 import HplConfigBuilder from './components/HplConfigBuilder.vue';
 import OsuBenchmarkBuilder from './components/OsuBenchmarkBuilder.vue';
+import PbsToSlurmConverter from './components/PbsToSlurmConverter.vue';
 import CustomSelect from './components/CustomSelect.vue';
 import Combobox from './components/Combobox.vue';
 
@@ -397,6 +398,7 @@ const modes = [
   { key: 'ncu', label: 'Nsight Compute (ncu)' },
   { key: 'slurm', label: 'Slurm 腳本產生器' },
   { key: 'slurm-array', label: 'Slurm 陣列' },
+  { key: 'pbs-to-slurm', label: 'PBS to Slurm 轉換器' },
   { key: 'perf', label: 'CPU Profiling (perf)' },
   { key: 'valgrind', label: 'Valgrind' },
   { key: 'cuda-memcheck', label: 'CUDA-MEMCHECK' },
@@ -1637,6 +1639,11 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
           <label>手動輸入 (Unload)</label>
           <input type="text" v-model="modules.unload" placeholder="intel" />
         </div>
+      </div>
+
+      <!-- PBS to Slurm Converter -->
+      <div v-if="mode === 'pbs-to-slurm'">
+        <PbsToSlurmConverter />
       </div>
 
       <!-- Apptainer / Singularity -->
