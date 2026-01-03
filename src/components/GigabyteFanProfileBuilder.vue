@@ -934,6 +934,31 @@ const toggleIdInArray = (arr, id) => {
   gap: 15px;
 }
 
+@media (max-width: 768px) {
+  .topo-section {
+    padding: 10px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .section-header .actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .search-wrapper {
+    width: 100%;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+}
+
 .topo-container {
   background: #010409;
   border: 1px solid #30363d;
@@ -941,6 +966,12 @@ const toggleIdInArray = (arr, id) => {
   padding: 15px;
   flex: 1;
   overflow: auto;
+}
+
+@media (max-width: 768px) {
+  .topo-container {
+    padding: 8px;
+  }
 }
 
 .topo-graph-view {
@@ -1019,6 +1050,28 @@ const toggleIdInArray = (arr, id) => {
   display: flex;
   gap: 30px;
   align-items: stretch;
+}
+
+@media (max-width: 768px) {
+  .mgmt-card {
+    flex-direction: column;
+    padding: 15px;
+    gap: 20px;
+  }
+  
+  .mgmt-divider {
+    width: 100%;
+    height: 1px;
+  }
+  
+  .mgmt-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .model-dropdown {
+    width: 100%;
+  }
 }
 
 .mgmt-group {
@@ -1374,9 +1427,13 @@ const toggleIdInArray = (arr, id) => {
   align-items: start;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1024px) {
   .policy-content-layout {
     grid-template-columns: 1fr;
+  }
+  
+  .chart-container {
+    order: -1; /* Move chart to top on mobile */
   }
 }
 
@@ -1763,6 +1820,30 @@ const toggleIdInArray = (arr, id) => {
   min-height: 38px;
   gap: 12px;
   background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 768px) {
+  .topo-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+  }
+  
+  .topo-attrs {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  .topo-toggle {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+  }
+  
+  .topo-block {
+    position: relative;
+  }
 }
 
 .topo-header:hover {
