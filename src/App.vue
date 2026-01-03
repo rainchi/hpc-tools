@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue';
 import { decompressFromEncodedURIComponent } from 'lz-string';
-import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildSrunCmd, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd } from './utils/builders';
+import { buildMpiCmd, buildNsysCmd, buildNcuCmd, buildSlurmScript, buildSrunCmd, buildArrayScript, buildTransferCmd, buildModulesCmd, buildPerfCmd, buildValgrindCmd, buildCudaMemcheckCmd, buildSysInfoCmd, buildApptainerCmd, buildCompileCmd, buildNvprofCmd, buildRocprofCmd, buildHipccCmd } from './utils/builders';
 import { HPL_PARAMETERS } from './utils/hpl';
 import CpuBinding from './components/CpuBinding.vue';
 import SystemInfoViewer from './components/SystemInfoViewer.vue';
@@ -70,6 +70,24 @@ const ncu = reactive({
   set: 'full',
   kernelRegex: '.*',
   executable: './cuda_app',
+});
+
+const rocprof = reactive({
+  output: 'results.csv',
+  stats: true,
+  hipTrace: true,
+  roctxTrace: false,
+  timestamp: true,
+  executable: './hip_app',
+});
+
+const hipcc = reactive({
+  output: 'app.out',
+  src: 'main.cpp',
+  optimization: '-O3',
+  offloadArch: 'gfx90a',
+  openmp: false,
+  customFlags: '',
 });
 
 const slurm = reactive({
@@ -433,6 +451,8 @@ const modes = [
   { key: 'nvprof', label: 'NVIDIA Profiler (nvprof)' },
   { key: 'nsys', label: 'Nsight Systems (nsys)' },
   { key: 'ncu', label: 'Nsight Compute (ncu)' },
+  { key: 'rocprof', label: 'ROCm Profiler (rocprof)' },
+  { key: 'hipcc', label: 'HIP Compiler (hipcc)' },
   { key: 'slurm', label: 'Slurm 腳本產生器' },
   { key: 'slurm-array', label: 'Slurm 陣列' },
   { key: 'pbs-to-slurm', label: 'PBS to Slurm 轉換器' },
@@ -527,6 +547,10 @@ const generatedCommand = computed(() => {
       return buildNsysCmd(nsys);
     case 'ncu':
       return buildNcuCmd(ncu);
+    case 'rocprof':
+      return buildRocprofCmd(rocprof);
+    case 'hipcc':
+      return buildHipccCmd(hipcc);
     case 'slurm':
       return `sbatch ${slurm.scriptName}`;
     case 'slurm-adv':
@@ -740,7 +764,7 @@ const currentServerId = ref('default');
 let isLoading = false;
 
 const serverState = {
-  mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem, osu
+  mpi, compile, nvprof, nsys, ncu, rocprof, hipcc, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem, osu
 };
 
 const saveCurrentServerData = () => {
@@ -966,7 +990,7 @@ watch(mode, () => {
   mobileMenuOpen.value = false;
 });
 
-watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem, osu], () => {
+watch([mpi, compile, nvprof, nsys, ncu, rocprof, hipcc, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem, osu], () => {
   saveCurrentServerData();
 }, { deep: true });
 </script>
@@ -1348,6 +1372,108 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <div class="form-group">
           <label>目標執行檔</label>
           <input type="text" v-model="ncu.executable" placeholder="./cuda_app" />
+        </div>
+      </div>
+
+      <!-- ROCm Profiler -->
+      <div v-if="mode === 'rocprof'">
+        <div class="info-banner">
+          <span class="icon">🚀</span>
+          <span>AMD ROCm Profiler (rocprof) 用於收集 GPU 效能指標與追蹤。</span>
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>輸出檔案 (.csv)</label>
+            <input type="text" v-model="rocprof.output" placeholder="results.csv" />
+          </div>
+          <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding-top: 25px;">
+            <input type="checkbox" id="roc-stats" v-model="rocprof.stats" />
+            <label for="roc-stats" style="margin-bottom: 0;">收集統計數據 (--stats)</label>
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <div>
+            <input type="checkbox" id="roc-hip" v-model="rocprof.hipTrace" />
+            <label for="roc-hip">HIP 追蹤 (--hip-trace)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="roc-roctx" v-model="rocprof.roctxTrace" />
+            <label for="roc-roctx">ROCTX 標記追蹤 (--roctx-trace)</label>
+          </div>
+          <div>
+            <input type="checkbox" id="roc-ts" v-model="rocprof.timestamp" />
+            <label for="roc-ts">啟用時間戳記 (--timestamp on)</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>目標執行檔</label>
+          <input type="text" v-model="rocprof.executable" placeholder="./hip_app" />
+        </div>
+
+        <div class="amd-env-box" style="margin-top: 20px; background: rgba(255, 0, 0, 0.05); border: 1px solid rgba(255, 0, 0, 0.2); border-radius: 8px; padding: 15px;">
+          <h4 style="margin-top: 0; color: #ff6b6b;">AMD GPU 常用環境變數</h4>
+          <ul style="font-size: 0.85rem; color: #c9d1d9; padding-left: 20px;">
+            <li><code>HSA_OVERRIDE_GFX_VERSION=10.3.0</code>: 強制指定 GPU 架構版本</li>
+            <li><code>ROCR_VISIBLE_DEVICES=0,1</code>: 指定可見的 ROCm 裝置</li>
+            <li><code>HIP_VISIBLE_DEVICES=0</code>: 指定可見的 HIP 裝置</li>
+            <li><code>AMD_LOG_LEVEL=3</code>: 設定 AMD 驅動程式日誌等級</li>
+            <li><code>MIOPEN_DEBUG_DISABLE_CONV_ALGO_TYPES=0</code>: MIOpen 調試</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- HIP Compiler -->
+      <div v-if="mode === 'hipcc'">
+        <div class="info-banner">
+          <span class="icon">🛠️</span>
+          <span>hipcc 是 AMD 的編譯器驅動程式，可將 HIP 程式碼編譯為 AMD 或 NVIDIA 執行檔。</span>
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>輸出檔名 (-o)</label>
+            <input type="text" v-model="hipcc.output" placeholder="app.out" />
+          </div>
+          <div class="form-group">
+            <label>優化等級</label>
+            <CustomSelect 
+              v-model="hipcc.optimization" 
+              :options="[
+                { value: '-O0', label: '-O0 (無優化)' },
+                { value: '-O2', label: '-O2 (標準)' },
+                { value: '-O3', label: '-O3 (最高)' },
+                { value: '-Ofast', label: '-Ofast (極速)' }
+              ]" 
+            />
+          </div>
+        </div>
+        <div class="inline">
+          <div class="form-group">
+            <label>目標架構 (--offload-arch)</label>
+            <input type="text" v-model="hipcc.offloadArch" placeholder="例如: gfx90a, gfx1030" />
+            <small class="muted">MI200: gfx90a | MI100: gfx908 | RX6000: gfx1030</small>
+          </div>
+          <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding-top: 25px;">
+            <input type="checkbox" id="hip-omp" v-model="hipcc.openmp" />
+            <label for="hip-omp" style="margin-bottom: 0;">啟用 OpenMP (-fopenmp)</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>原始碼檔案</label>
+          <input type="text" v-model="hipcc.src" placeholder="main.cpp" />
+        </div>
+        <div class="form-group">
+          <label>自定義旗標</label>
+          <input type="text" v-model="hipcc.customFlags" placeholder="-I/opt/rocm/include" />
+        </div>
+
+        <div class="amd-env-box" style="margin-top: 20px; background: rgba(255, 0, 0, 0.05); border: 1px solid rgba(255, 0, 0, 0.2); border-radius: 8px; padding: 15px;">
+          <h4 style="margin-top: 0; color: #ff6b6b;">AMD GPU 常用環境變數</h4>
+          <ul style="font-size: 0.85rem; color: #c9d1d9; padding-left: 20px;">
+            <li><code>HSA_OVERRIDE_GFX_VERSION=10.3.0</code>: 強制指定 GPU 架構版本</li>
+            <li><code>ROCR_VISIBLE_DEVICES=0,1</code>: 指定可見的 ROCm 裝置</li>
+            <li><code>HIP_VISIBLE_DEVICES=0</code>: 指定可見的 HIP 裝置</li>
+            <li><code>AMD_LOG_LEVEL=3</code>: 設定 AMD 驅動程式日誌等級</li>
+          </ul>
         </div>
       </div>
 

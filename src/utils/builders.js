@@ -308,3 +308,25 @@ export const buildCompileCmd = (c) => {
   
   return cmd.trim();
 };
+
+export const buildRocprofCmd = (r) => {
+  let cmd = `rocprof`;
+  if (r.stats) cmd += ` --stats`;
+  if (r.hipTrace) cmd += ` --hip-trace`;
+  if (r.roctxTrace) cmd += ` --roctx-trace`;
+  if (r.timestamp) cmd += ` --timestamp on`;
+  if (r.output) cmd += ` -o ${r.output}`;
+  cmd += ` ${r.executable}`;
+  return cmd.trim();
+};
+
+export const buildHipccCmd = (c) => {
+  let cmd = `hipcc`;
+  if (c.output) cmd += ` -o ${c.output}`;
+  if (c.optimization) cmd += ` ${c.optimization}`;
+  if (c.offloadArch) cmd += ` --offload-arch=${c.offloadArch}`;
+  if (c.openmp) cmd += ` -fopenmp`;
+  if (c.customFlags) cmd += ` ${c.customFlags}`;
+  if (c.src) cmd += ` ${c.src}`;
+  return cmd.trim();
+};
