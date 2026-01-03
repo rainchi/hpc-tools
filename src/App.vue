@@ -790,8 +790,10 @@ const deleteServer = () => {
 };
 
 const exportConfig = () => {
+  const currentServer = servers.value.find(s => s.id === currentServerId.value);
   const data = {
     mode: mode.value,
+    serverName: currentServer ? currentServer.name : '預設伺服器',
     state: {}
   };
   for (const key in serverState) {
@@ -802,7 +804,8 @@ const exportConfig = () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'hpc-tools-config.json';
+  const fileName = currentServer ? `hpc-config-${currentServer.name}.json` : 'hpc-tools-config.json';
+  a.download = fileName;
   a.click();
   URL.revokeObjectURL(url);
   showToast('設定檔已匯出！');
@@ -814,6 +817,20 @@ const triggerImport = () => {
   fileInput.value.click();
 };
 
+const createNewServerFromImport = (data) => {
+  const id = 'server_' + Date.now();
+  const name = data.serverName || '匯入的伺服器';
+  servers.value.push({ id, name });
+  // We need to save the data for this new ID before switching
+  const stateToSave = JSON.stringify(data.state || {});
+  localStorage.setItem(`hpc_tools_data_${id}`, stateToSave);
+  localStorage.setItem('hpc_tools_servers', JSON.stringify(servers.value));
+  
+  switchServer(id);
+  if (data.mode) mode.value = data.mode;
+  showToast(`已建立新伺服器「${name}」並匯入設定`);
+};
+
 const handleFileImport = (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -823,9 +840,30 @@ const handleFileImport = (event) => {
     try {
       const json = e.target.result;
       const data = JSON.parse(json);
-      if (data.mode) mode.value = data.mode;
-      if (data.state) applyState(data.state);
-      showToast('設定檔已匯入！');
+      
+      if (data.serverName) {
+        const existingServer = servers.value.find(s => s.name === data.serverName);
+        if (existingServer) {
+          openModal({
+            title: '匯入設定',
+            message: `伺服器「${data.serverName}」已存在，是否要覆蓋現有設定？`,
+            confirmText: '覆蓋現有',
+            onConfirm: () => {
+              switchServer(existingServer.id);
+              if (data.state) applyState(data.state);
+              if (data.mode) mode.value = data.mode;
+              showToast(`已覆蓋「${data.serverName}」的設定`);
+            }
+          });
+        } else {
+          createNewServerFromImport(data);
+        }
+      } else {
+        // Legacy format
+        if (data.mode) mode.value = data.mode;
+        if (data.state) applyState(data.state);
+        showToast('設定檔已匯入！');
+      }
     } catch (err) {
       console.error(err);
       showToast('匯入失敗：檔案格式錯誤', 'error');
