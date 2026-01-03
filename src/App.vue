@@ -7,6 +7,8 @@ import CpuBinding from './components/CpuBinding.vue';
 import SystemInfoViewer from './components/SystemInfoViewer.vue';
 import ApptainerBuilder from './components/ApptainerBuilder.vue';
 import HplConfigBuilder from './components/HplConfigBuilder.vue';
+import OsuBenchmarkBuilder from './components/OsuBenchmarkBuilder.vue';
+import CustomSelect from './components/CustomSelect.vue';
 import Combobox from './components/Combobox.vue';
 
 // State
@@ -111,6 +113,25 @@ const hplMem = reactive({
   memoryType: 'cpu',
   gpuCount: 1
 });
+
+const osu = reactive({
+  category: 'pt2pt',
+  benchmark: 'osu_latency',
+  device: 'cpu',
+  mpiPath: ''
+});
+
+const handleOsuSendToMpi = (cmd) => {
+  mpi.executable = cmd;
+  mode.value = 'mpi';
+  showToast('已將 OSU 指令填入 MPI Runner');
+};
+
+const handleOsuSendToSlurm = (cmd) => {
+  slurm.run = `mpirun -np ${slurm.nodes * slurm.ntasksPerNode} ${cmd}`;
+  mode.value = 'slurm';
+  showToast('已將 OSU 指令填入 Slurm 腳本');
+};
 
 const transfer = reactive({
   src: './data/',
@@ -383,6 +404,7 @@ const modes = [
   { key: 'apptainer', label: 'Apptainer / Singularity' },
   { key: 'apptainer-builder', label: 'Apptainer Builder' },
   { key: 'hpl', label: 'HPL Config Builder' },
+  { key: 'osu', label: 'OSU Benchmark' },
   { key: 'modules', label: 'Environment Modules' },
 ];
 
@@ -677,7 +699,7 @@ const currentServerId = ref('default');
 let isLoading = false;
 
 const serverState = {
-  mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem
+  mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem, osu
 };
 
 const saveCurrentServerData = () => {
@@ -861,7 +883,7 @@ if (hash.startsWith('#share=')) {
   }
 }
 
-watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem], () => {
+watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, modules, perf, valgrind, cudaMem, sysinfo, apptainer, hpl, hplMem, osu], () => {
   saveCurrentServerData();
 }, { deep: true });
 </script>
@@ -956,11 +978,14 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
       <div v-if="mode === 'mpi'">
         <div class="form-group">
           <label>MPI 實作版本 (Implementation)</label>
-          <select v-model="mpi.type">
-            <option value="openmpi">OpenMPI (ompi)</option>
-            <option value="intel">Intel MPI (impi)</option>
-            <option value="mpich">MPICH</option>
-          </select>
+          <CustomSelect 
+            v-model="mpi.type" 
+            :options="[
+              { value: 'openmpi', label: 'OpenMPI (ompi)' },
+              { value: 'intel', label: 'Intel MPI (impi)' },
+              { value: 'mpich', label: 'MPICH' }
+            ]" 
+          />
         </div>
 
         <div class="inline">
@@ -1035,11 +1060,14 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
       <div v-if="mode === 'compile'">
         <div class="form-group">
           <label>編譯器 (Compiler)</label>
-          <select v-model="compile.compiler">
-            <option value="gcc">GCC (gcc/g++)</option>
-            <option value="icc">Intel C++ (icc/icpc)</option>
-            <option value="nvcc">NVIDIA CUDA (nvcc)</option>
-          </select>
+          <CustomSelect 
+            v-model="compile.compiler" 
+            :options="[
+              { value: 'gcc', label: 'GCC (gcc/g++)' },
+              { value: 'icc', label: 'Intel C++ (icc/icpc)' },
+              { value: 'nvcc', label: 'NVIDIA CUDA (nvcc)' }
+            ]" 
+          />
         </div>
 
         <div class="inline">
@@ -1630,6 +1658,15 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         <HplConfigBuilder :config="hpl" :mem-settings="hplMem" />
       </div>
 
+      <!-- OSU Benchmark -->
+      <div v-if="mode === 'osu'">
+        <OsuBenchmarkBuilder 
+          :config="osu" 
+          @send-to-mpi="handleOsuSendToMpi"
+          @send-to-slurm="handleOsuSendToSlurm"
+        />
+      </div>
+
       <div class="result-box" v-if="mode === 'slurm'">
         <div class="code-block">
           <div class="code-header">
@@ -1652,7 +1689,7 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
         </div>
       </div>
 
-      <div class="result-box" v-else-if="mode !== 'apptainer-builder' && mode !== 'hpl'">
+      <div class="result-box" v-else-if="mode !== 'apptainer-builder' && mode !== 'hpl' && mode !== 'osu'">
         <div class="btn-row">
           <button class="copy-btn" @click="copyToClipboard">複製</button>
           
