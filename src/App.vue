@@ -9,6 +9,7 @@ import ApptainerBuilder from './components/ApptainerBuilder.vue';
 import HplConfigBuilder from './components/HplConfigBuilder.vue';
 import OsuBenchmarkBuilder from './components/OsuBenchmarkBuilder.vue';
 import StreamBenchmarkBuilder from './components/StreamBenchmarkBuilder.vue';
+import FioBenchmarkBuilder from './components/FioBenchmarkBuilder.vue';
 import PbsToSlurmConverter from './components/PbsToSlurmConverter.vue';
 import CustomSelect from './components/CustomSelect.vue';
 import Combobox from './components/Combobox.vue';
@@ -139,6 +140,12 @@ const handleStreamSendToSlurm = (cmd) => {
   slurm.run = cmd;
   mode.value = 'slurm';
   showToast('已將 STREAM 指令填入 Slurm 腳本');
+};
+
+const handleFioSendToSlurm = (cmd) => {
+  slurm.run = cmd;
+  mode.value = 'slurm';
+  showToast('已將 FIO 指令填入 Slurm 腳本');
 };
 
 const transfer = reactive({
@@ -415,6 +422,7 @@ const modes = [
   { key: 'hpl', label: 'HPL Config Builder' },
   { key: 'stream', label: 'STREAM Benchmark' },
   { key: 'osu', label: 'OSU Benchmark' },
+  { key: 'fio', label: 'FIO Disk I/O Benchmark' },
   { key: 'modules', label: 'Environment Modules' },
 ];
 
@@ -1723,6 +1731,11 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
           @send-to-mpi="handleOsuSendToMpi"
           @send-to-slurm="handleOsuSendToSlurm"
         />
+      </div>
+
+      <!-- FIO Benchmark -->
+      <div v-if="mode === 'fio'">
+        <FioBenchmarkBuilder @send-to-slurm="handleFioSendToSlurm" />
       </div>
 
       <div class="result-box" v-if="mode === 'slurm'">
