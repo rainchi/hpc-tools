@@ -1018,21 +1018,21 @@ watch([mpi, compile, nvprof, nsys, ncu, slurm, slurmAdv, slurmArray, transfer, m
     <aside :class="['sidebar', { collapsed: sidebarCollapsed, 'mobile-open': mobileMenuOpen }]">
       <div class="sidebar-header">
         <span class="brand">🚀 HPC Tools</span>
-        <button class="toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed">{{ sidebarCollapsed ? '➤' : '◀' }}</button>
+        <button class="toggle-btn desktop-only" @click="sidebarCollapsed = !sidebarCollapsed">{{ sidebarCollapsed ? '➤' : '◀' }}</button>
       </div>
-      <div class="sidebar-search" v-if="!sidebarCollapsed">
+      <div class="sidebar-search" v-if="!sidebarCollapsed || mobileMenuOpen">
         <input type="text" v-model="searchQuery" placeholder="搜尋功能..." />
       </div>
       <nav class="sidebar-nav" :aria-label="'功能清單'">
         <ul>
           <li v-for="m in filteredModes" :key="m.key" :class="{ active: mode === m.key }" @click="mode = m.key">
-            <span class="item-label" v-if="!sidebarCollapsed">{{ m.label }}</span>
+            <span class="item-label" v-if="!sidebarCollapsed || mobileMenuOpen">{{ m.label }}</span>
             <span class="item-dot" v-else :title="m.label"></span>
           </li>
         </ul>
       </nav>
 
-      <div class="sidebar-footer" v-if="!sidebarCollapsed">
+      <div class="sidebar-footer" v-if="!sidebarCollapsed || mobileMenuOpen">
         <div class="server-switcher">
           <label>伺服器實例</label>
           <div class="server-select-row">
@@ -2315,40 +2315,6 @@ hr {
   color: #ffffff;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .app-shell {
-    grid-template-columns: 64px 1fr;
-  }
-
-  .sidebar {
-    width: 64px;
-    padding: 16px 8px;
-  }
-
-  .sidebar:not(.collapsed) {
-    width: 64px;
-  }
-
-  .sidebar-header .brand,
-  .sidebar-search,
-  .item-label {
-    display: none;
-  }
-
-  .toggle-btn {
-    display: none;
-  }
-
-  .content {
-    padding: 16px;
-  }
-
-  .inline {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Server Switcher */
 .sidebar-footer {
   margin-top: auto;
@@ -2683,6 +2649,10 @@ hr {
 
   .page-title {
     display: none; /* Hidden on mobile because it's in the header */
+  }
+
+  .desktop-only {
+    display: none !important;
   }
 
   /* Component specific responsive fixes */
