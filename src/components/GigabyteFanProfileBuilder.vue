@@ -1422,8 +1422,8 @@ const toggleIdInArray = (arr, id) => {
 
 .policy-content-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 20px;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
   align-items: start;
 }
 
@@ -1455,7 +1455,7 @@ const toggleIdInArray = (arr, id) => {
 
 .fan-chart {
   width: 100%;
-  height: 120px;
+  height: 180px;
   background: #0d1117;
   cursor: crosshair;
   touch-action: none;
@@ -1626,8 +1626,8 @@ const toggleIdInArray = (arr, id) => {
 
 .config-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -1658,9 +1658,9 @@ const toggleIdInArray = (arr, id) => {
   background: #0d1117;
   border: 1px solid #30363d;
   color: #e6edf3;
-  padding: 8px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .form-group input:focus, .form-group textarea:focus {
